@@ -7,14 +7,10 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module'; // <-- ¡Impórtalo aquí!
 import { UsersModule } from './users/users.module';
-import { ActasModule } from './actas/actas.module';
 import { EmailModule } from './email/email.module';
 import { AiModule } from './ai/ai.module';
 import { TasksModule } from './tasks/tasks.module';
-//import { AdminModule } from './admin/admin.module';
 import { AdminModule } from './admin/admin.module';
-import { ActaComplianceModule } from './acta-compliance/acta-compliance.module';
-import { AuditModule } from './audit/audit.module';
 import { SearchModule } from './search/search.module';
 
 @Module({
@@ -24,15 +20,10 @@ import { SearchModule } from './search/search.module';
     PrismaModule,
     AuthModule,
     UsersModule,
-    ActasModule,
     EmailModule,
     AiModule,
-    TasksModule, // <-- ¡Y añádelo a la lista de imports!
-    //AdminModule, // Añade AdminModule si existe
     TasksModule,
     AdminModule,
-    ActaComplianceModule,
-    AuditModule,
     SearchModule,
   ],
   controllers: [AppController],

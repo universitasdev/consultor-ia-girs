@@ -67,6 +67,39 @@ export class AiController {
     };
   }
 
+  // --- 👇 ENDPOINTS PARA USUARIOS (HISTORIAL DE CHAT) ---
+
+  @Get('conversations')
+  @ApiOperation({
+    summary: 'Listar todas las conversaciones del usuario autenticado',
+    description:
+      'Devuelve un historial completo de las conversaciones organizadas por fecha y sesión.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Historial de conversaciones recuperado exitosamente.',
+  })
+  async getMyConversations(@GetUser() user: User) {
+    return this.aiService.getAllUserConversations(user.id);
+  }
+
+  @Get('conversations/:sessionId')
+  @ApiOperation({
+    summary: 'Obtener detalle de una sesión de chat específica',
+    description:
+      'Devuelve todos los mensajes cruzados entre el usuario y el bot en una sesión concreta.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Mensajes de la sesión recuperados exitosamente.',
+  })
+  async getMyConversationDetails(
+    @Param('sessionId') sessionId: string,
+    @GetUser() user: User,
+  ) {
+    return this.aiService.getConversationBySession(sessionId, user.id);
+  }
+
   // --- 👇 ENDPOINTS PARA ADMINISTRADORES ---
 
   @Get('admin/users')

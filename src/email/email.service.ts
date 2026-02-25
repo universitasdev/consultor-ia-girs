@@ -28,9 +28,9 @@ export class EmailService {
     htmlContent = htmlContent.replace(/{{confirmationUrl}}/g, confirmationLink);
 
     await this.resend.emails.send({
-      from: `Actas de Entrega <${this.fromEmail}>`,
+      from: `Universitas Legal <${this.fromEmail}>`,
       to: [to],
-      subject: 'Confirma tu cuenta',
+      subject: 'Gestión Integral de Residuos Sólidos - Confirma tu cuenta',
       html: htmlContent,
     });
   }
@@ -38,12 +38,34 @@ export class EmailService {
   async sendPasswordResetOtp(to: string, otp: string) {
     // (Tu lógica de email para OTP va aquí)
     // ...
-    const htmlContent = `<p>Tu código de reseteo de contraseña es: <strong>${otp}</strong></p>`; // Simplificado
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #ffffff;">
+        <h2 style="color: #001A70; text-align: left; font-size: 18px;">
+          Recuperación de Contraseña
+        </h2>
+        <p style="color: #333; font-size: 16px;">
+          Hola,
+        </p>
+        <p style="color: #333; font-size: 16px;">
+          Hemos recibido una solicitud para restablecer tu contraseña en la plataforma de <strong>Universitas Legal</strong>.
+        </p>
+        <p style="color: #333; font-size: 16px;">
+          Tu código de verificación es: <strong style="font-size: 20px; color: #FF8C00;">${otp}</strong>
+        </p>
+        <p style="color: #555; font-size: 14px; margin-bottom: 20px;">
+          Si no has solicitado este cambio, por favor ignora este correo.
+        </p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <div style="text-align: center; color: #888; font-size: 12px; margin-top: 20px;">
+          <p>Atentamente,<br>El equipo de Universitas Legal<br>Gestión Integral de Residuos Sólidos (GIRS)</p>
+        </div>
+      </div>
+    `;
 
     await this.resend.emails.send({
-      from: `Plataforma Actas <${this.fromEmail}>`,
+      from: `Universitas Legal <${this.fromEmail}>`,
       to: [to],
-      subject: 'Tu código de reseteo de contraseña',
+      subject: 'Gestión Integral de Residuos Sólidos - Recuperación de contraseña',
       html: htmlContent,
     });
   }

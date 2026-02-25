@@ -7,11 +7,10 @@ echo "🚀 Iniciando despliegue..."
 echo "🔄 Generando cliente Prisma..."
 npx prisma generate
 
-echo "📦 Ejecutando migraciones de Prisma..."
-npx prisma migrate deploy
+# (Migraciones omitidas aquí porque Cloud Run tiene un timeout estricto, 
+# se deben lanzar manualmente o en un paso separado de GitHub Actions)
 
 # 2. Iniciar la aplicación
-# Intentamos ejecutar. Si main.js cambió de lugar, esto nos ayudará a depurar,
 # pero con el cambio en tsconfig debería estar en dist/main.js
 echo "🟢 Iniciando servidor NestJS..."
 exec node dist/main.js

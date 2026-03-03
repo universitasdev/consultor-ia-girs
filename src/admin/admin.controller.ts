@@ -1,14 +1,15 @@
 // src/admin/admin.controller.ts
 import {
   Controller,
-  Get, // <-- Import Get
+  Get,
   Patch,
+  Delete,
   Body,
   UseGuards,
   HttpCode,
   HttpStatus,
-  Param, // <-- Import Param
-  Query, // <-- Import Query
+  Param,
+  Query,
   Post,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
@@ -27,7 +28,6 @@ import {
 import { UpdateUserRoleDto } from './dto/update-role.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { BulkDeleteUsersDto } from './dto/bulk-delete.dto';
-// Importa DTOs
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -36,15 +36,66 @@ import { BulkDeleteUsersDto } from './dto/bulk-delete.dto';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  // ==================== GESTIÓN DE USUARIOS ====================
+
+  @Get('users')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Listar usuarios con paginación y búsqueda por email',
+  })
+  @ApiResponse({ status: 200, description: 'Lista de usuarios recuperada.' })
+  findAllUsers(@Query() query: GetUsersQueryDto) {
+    return this.adminService.findAllUsers(query);
+  }
+
+  @Patch('users/:id/toggle-active')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Activar/desactivar un usuario' })
+  @ApiResponse({ status: 200, description: 'Estado del usuario cambiado.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  toggleUserActive(@Param('id') id: string) {
+    return this.adminService.toggleUserActive(id);
+  }
+
+  @Delete('users/:id')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Eliminar usuario pasivamente (soft delete, libera email, no permite eliminar admins)',
+  })
+  @ApiResponse({ status: 200, description: 'Usuario eliminado pasivamente.' })
+  @ApiResponse({ status: 403, description: 'No puedes eliminar a un admin.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  softDeleteUser(@Param('id') id: string) {
+    return this.adminService.softDeleteUser(id);
+  }
+
+  @Get('users/:id/conversations')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Ver historial de chats de un usuario' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversaciones del usuario recuperadas.',
+  })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  getUserConversations(@Param('id') id: string) {
+    return this.adminService.getUserConversations(id);
+  }
+
+  // ==================== ROLES ====================
+
   @Patch('users/role')
-  @Roles(UserRole.ADMIN) // <-- Protegido solo para ADMINS
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Actualizar el rol de un usuario (Solo Admin)' })
   @ApiResponse({ status: 200, description: 'Rol actualizado.' })
   @ApiResponse({ status: 403, description: 'Acceso denegado (No eres Admin).' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
   updateUserRole(@Body() updateUserRoleDto: UpdateUserRoleDto) {
-    // <-- Usa el DTO importado
     const { userId, newRole } = updateUserRoleDto;
     return this.adminService.updateUserRole(userId, newRole);
   }
@@ -62,20 +113,39 @@ export class AdminController {
     return this.adminService.upgradeUserToPro(id);
   }
 
-  @Get('users')
+  // ==================== MÉTRICAS ====================
+
+  @Get('metrics/dashboard')
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Obtener lista de todos los usuarios (con filtros y paginación)',
+    summary: 'Métricas consolidadas de usuarios y chats (Dashboard)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de usuarios recuperada exitosamente.',
+    description: 'Métricas del dashboard recuperadas.',
   })
-  @ApiResponse({ status: 403, description: 'Acceso denegado.' })
-  findAllUsers(@Query() query: GetUsersQueryDto) {
-    return this.adminService.findAllUsers(query);
+  getDashboardMetrics() {
+    return this.adminService.getDashboardMetrics();
   }
+
+  // ==================== ELIMINACIÓN MASIVA ====================
+
+  @Post('users/bulk-delete')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Eliminar (desactivar) masivamente usuarios por su ID',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuarios desactivados correctamente.',
+  })
+  bulkDeleteUsers(@Body() bulkDeleteUsersDto: BulkDeleteUsersDto) {
+    return this.adminService.bulkDeleteUsers(bulkDeleteUsersDto.userIds);
+  }
+
+  // ==================== DETALLE ====================
 
   @Get('users/:id')
   @Roles(UserRole.ADMIN)
@@ -90,20 +160,5 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
   findOneUser(@Param('id') id: string) {
     return this.adminService.findOneUser(id);
-  }
-
-  @Post('users/bulk-delete')
-  @Roles(UserRole.ADMIN)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Eliminar (desactivar) masivamente usuarios por su ID',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Usuarios desactivados correctamente.',
-  })
-  @ApiResponse({ status: 403, description: 'Acceso denegado.' })
-  bulkDeleteUsers(@Body() bulkDeleteUsersDto: BulkDeleteUsersDto) {
-    return this.adminService.bulkDeleteUsers(bulkDeleteUsersDto.userIds);
   }
 }

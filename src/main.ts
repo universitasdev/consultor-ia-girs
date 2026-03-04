@@ -39,7 +39,7 @@ async function bootstrap() {
       'https://app.actadeentrega.online',
       'https://admin.actadeentrega.online',
       'https://ia.girs.universitas.legal',
-      'https://panel.girs.universitas.legal',
+      'https://admin-girs.netlify.app',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

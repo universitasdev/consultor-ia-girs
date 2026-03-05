@@ -1,5 +1,12 @@
 // src/admin/dto/get-users-query.dto.ts
-import { IsOptional, IsEnum, IsString, IsInt, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsInt,
+  Min,
+  IsBooleanString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserRole } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -39,4 +46,12 @@ export class GetUsersQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Filtrar por estado: true = activos, false = desactivados/eliminados. Si no se envía, muestra todos.',
+  })
+  @IsOptional()
+  @IsBooleanString()
+  isActive?: string;
 }

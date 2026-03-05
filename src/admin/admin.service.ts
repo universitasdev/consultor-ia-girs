@@ -44,16 +44,20 @@ export class AdminService {
   // 5. Método para listar todos los usuarios
   // 5. Método para listar todos los usuarios (con paginación y filtros)
   async findAllUsers(query: GetUsersQueryDto) {
-    const { page = 1, limit = 10, role, search } = query;
+    const { page = 1, limit = 10, role, search, isActive } = query;
     const skip = (page - 1) * limit;
 
     // Construir el filtro dinámicamente
     const where: Prisma.UserWhereInput = {
-      isActive: true,
       role: {
         not: UserRole.ADMIN,
       },
     };
+
+    // Si se envía isActive, filtrar por estado; si no, mostrar todos
+    if (isActive !== undefined) {
+      where.isActive = isActive === 'true';
+    }
 
     if (role) {
       where.role = role;

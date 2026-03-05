@@ -28,9 +28,9 @@ export class EmailService {
     htmlContent = htmlContent.replace(/{{confirmationUrl}}/g, confirmationLink);
 
     await this.resend.emails.send({
-      from: `Universitas Legal <${this.fromEmail}>`,
+      from: `Consultor IA GIRS <${this.fromEmail}>`,
       to: [to],
-      subject: 'Gestión Integral de Residuos Sólidos - Confirma tu cuenta',
+      subject: 'Activa tu cuenta - Consultor IA GIRS',
       html: htmlContent,
     });
   }
@@ -39,33 +39,43 @@ export class EmailService {
     // (Tu lógica de email para OTP va aquí)
     // ...
     const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #ffffff;">
-        <h2 style="color: #001A70; text-align: left; font-size: 18px;">
-          Recuperación de Contraseña
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; background-color: #ffffff; padding: 40px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <h2 style="color: #1a2b4b; text-align: center; font-size: 24px; margin-bottom: 30px; font-weight: bold;">
+          Recupera tu contraseña
         </h2>
-        <p style="color: #333; font-size: 16px;">
+        <p style="color: #333333; font-size: 16px; line-height: 1.5;">
           Hola,
         </p>
-        <p style="color: #333; font-size: 16px;">
-          Hemos recibido una solicitud para restablecer tu contraseña en la plataforma de <strong>Universitas Legal</strong>.
+        <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+          Hemos recibido una solicitud para restablecer tu contraseña en la plataforma del <strong>Consultor IA de Gestión Integral de Residuos Sólidos (GIRS)</strong>.
         </p>
-        <p style="color: #333; font-size: 16px;">
-          Tu código de verificación es: <strong style="font-size: 20px; color: #FF8C00;">${otp}</strong>
+        <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+          Tu código de verificación es:
         </p>
-        <p style="color: #555; font-size: 14px; margin-bottom: 20px;">
-          Si no has solicitado este cambio, por favor ignora este correo.
-        </p>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-        <div style="text-align: center; color: #888; font-size: 12px; margin-top: 20px;">
-          <p>Atentamente,<br>El equipo de Universitas Legal<br>Gestión Integral de Residuos Sólidos (GIRS)</p>
+        <div style="text-align: center; margin: 25px 0;">
+          <span style="font-size: 32px; font-weight: bold; color: #1a2b4b; letter-spacing: 6px; background-color: #f4f4f4; padding: 12px 24px; border-radius: 8px; display: inline-block;">${otp}</span>
         </div>
+        <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+          Ingresa este código en la plataforma para establecer tu nueva contraseña.
+        </p>
+        <p style="color: #333333; font-size: 16px; line-height: 1.5;">
+          Si no solicitaste este cambio, por favor ignora este correo electrónico.
+        </p>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
+        <p style="color: #666666; font-size: 14px; line-height: 1.5;">
+          Si tienes alguna pregunta o comentario no dudes en escribirnos a <a href="mailto:contacto@universitas.legal" style="color: #1a2b4b;">contacto@universitas.legal</a>
+        </p>
+        <p style="color: #333333; font-size: 16px; line-height: 1.5; margin-top: 20px;">
+          Saludos,<br>
+          El equipo de Universitas
+        </p>
       </div>
     `;
 
     await this.resend.emails.send({
-      from: `Universitas Legal <${this.fromEmail}>`,
+      from: `Consultor IA GIRS <${this.fromEmail}>`,
       to: [to],
-      subject: 'Gestión Integral de Residuos Sólidos - Recuperación de contraseña',
+      subject: 'Recupera tu contraseña - Consultor IA GIRS',
       html: htmlContent,
     });
   }

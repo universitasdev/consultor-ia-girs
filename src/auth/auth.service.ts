@@ -98,7 +98,19 @@ export class AuthService {
   async register(
     createAuthDto: CreateAuthDto,
   ): Promise<Omit<User, 'password'>> {
-    const { email, password, nombre, apellido, telefono } = createAuthDto;
+    const {
+      email,
+      password,
+      nombre,
+      apellido,
+      telefono,
+      estado,
+      municipio,
+      tipo_usuario,
+      nombre_ente,
+      cargo,
+      estatus_normativa_girs,
+    } = createAuthDto;
     console.log(`[register] Intentando registrar usuario: ${email}`);
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
@@ -118,7 +130,18 @@ export class AuthService {
         nombre,
         apellido,
         telefono,
+        estado,
+        municipio,
+        tipoUsuario: tipo_usuario,
         confirmationToken: confirmationToken,
+        profileCompleted: true, // Se marca como completado porque se hace en el registro
+        profile: {
+          create: {
+            nombreEnte: nombre_ente,
+            cargo,
+            estatusNormativaGirs: estatus_normativa_girs,
+          },
+        },
       },
     });
     console.log(`[register] Usuario ${email} creado con ID: ${newUser.id}`);

@@ -114,7 +114,7 @@ export class AiService {
         profile: {
           select: {
             cargo: true,
-            institucion: true,
+            nombreEnte: true,
           },
         },
         _count: {
@@ -154,7 +154,7 @@ export class AiService {
           nombreCompleto: `${user.nombre} ${user.apellido || ''}`.trim(),
           telefono: user.telefono,
           cargo: user.profile?.cargo,
-          institucion: user.profile?.institucion,
+          institucion: user.profile?.nombreEnte,
           totalMensajes: user._count.chatHistory,
           totalSesiones: sesiones.length,
           ultimoMensaje: {
@@ -199,7 +199,7 @@ export class AiService {
         profile: {
           select: {
             cargo: true,
-            institucion: true,
+            nombreEnte: true,
           },
         },
       },
@@ -276,7 +276,7 @@ export class AiService {
         nombreCompleto: `${user.nombre} ${user.apellido || ''}`.trim(),
         telefono: user.telefono,
         cargo: user.profile?.cargo,
-        institucion: user.profile?.institucion,
+        institucion: user.profile?.nombreEnte,
       },
       totalMensajes: mensajesPlanos.length,
       totalSesiones: sesionesUnicas.length,

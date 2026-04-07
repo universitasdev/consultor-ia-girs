@@ -17,6 +17,17 @@ enum UserRole {
   PAID_USER // Usuario pago (Pro)
   ADMIN     // Administrador
 }
+
+enum TipoUsuario {
+  SERVIDOR_PUBLICO
+  ASESOR_PRIVADO
+}
+
+enum EstatusNormativaGIRS {
+  VIGENTE
+  EN_MORA
+  EN_REVISION
+}
 // 3. --- Definición de tus Modelos (Tablas) ---
 
 model User {
@@ -36,6 +47,9 @@ model User {
   otpExpiresAt       DateTime?
 
   telefono          String?   // AÑADIDO
+  estado            String?
+  municipio         String?
+  tipoUsuario       TipoUsuario? @map("tipo_usuario")
 
   createdAt         DateTime  @default(now()) @map("created_at") // AÑADIDO
   updatedAt         DateTime  @updatedAt @map("updated_at")
@@ -48,9 +62,10 @@ model User {
 
 model UserProfile {
   id               String  @id @default(uuid())
-  institucion      String
-  cargo            String
+  nombreEnte       String  @map("nombre_ente")
+  cargo            String?
   plazoEntregaActa String? @map("plazo_entrega_acta")
+  estatusNormativaGirs EstatusNormativaGIRS? @map("estatus_normativa_girs")
 
   // Relación uno a uno con el usuario
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

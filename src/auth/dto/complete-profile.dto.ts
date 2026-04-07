@@ -1,24 +1,36 @@
 // src/users/dto/complete-profile.dto.ts
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import { EstatusNormativaGIRS } from '@prisma/client';
 
 export class CompleteProfileDto {
   @ApiProperty({
-    description: 'Institución a la que pertenece el usuario',
+    description: 'Nombre del ente o institución',
     example: 'Ministerio de Educación',
   })
   @IsString()
   @IsNotEmpty()
-  institucion: string;
+  nombre_ente: string;
 
   @ApiProperty({
-    description: 'Cargo actual del usuario en la institución',
+    description: 'Cargo actual del usuario (opcional)',
     example: 'Director General',
+    required: false,
   })
   @IsString()
-  @IsNotEmpty()
-  cargo: string;
+  @IsOptional()
+  cargo?: string;
+
+  @ApiProperty({
+    description: 'Estatus de la normativa GIRS (opcional)',
+    enum: EstatusNormativaGIRS,
+    example: EstatusNormativaGIRS.VIGENTE,
+    required: false,
+  })
+  @IsEnum(EstatusNormativaGIRS)
+  @IsOptional()
+  estatus_normativa_girs?: EstatusNormativaGIRS;
 
   @ApiProperty({
     required: false, // Basado en tu schema, este campo es opcional

@@ -73,7 +73,8 @@ export class CreateAuthDto {
   @ApiProperty({ example: 'Director General', required: false })
   @ValidateIf((o) => o.tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO)
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'El cargo es obligatorio para servidores públicos' })
+  @IsOptional() // Permitir que sea null o undefined si el ValidateIf es falso
   cargo?: string;
 
   @ApiProperty({
@@ -82,6 +83,9 @@ export class CreateAuthDto {
     required: false,
   })
   @ValidateIf((o) => o.tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO)
-  @IsEnum(EstatusNormativaGIRS)
+  @IsEnum(EstatusNormativaGIRS, {
+    message: 'El estatus debe ser VIGENTE, EN_MORA o EN_REVISION',
+  })
+  @IsOptional() // Permitir que sea null o undefined si el ValidateIf es falso
   estatus_normativa_girs?: EstatusNormativaGIRS;
 }

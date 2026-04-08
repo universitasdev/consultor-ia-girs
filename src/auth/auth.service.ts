@@ -138,8 +138,11 @@ export class AuthService {
         profile: {
           create: {
             nombreEnte: nombre_ente,
-            cargo,
-            estatusNormativaGirs: estatus_normativa_girs,
+            cargo: (cargo as string) === '' ? null : cargo,
+            estatusNormativaGirs:
+              (estatus_normativa_girs as any) === ''
+                ? null
+                : estatus_normativa_girs,
           },
         },
       },

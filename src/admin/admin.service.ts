@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // <-- 1. Importa Prisma
-import { UserRole, Prisma } from '@prisma/client';
+import { UserRole, Prisma, TipoUsuario } from '@prisma/client';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 
 @Injectable()
@@ -44,7 +44,16 @@ export class AdminService {
   // 5. Método para listar todos los usuarios
   // 5. Método para listar todos los usuarios (con paginación y filtros)
   async findAllUsers(query: GetUsersQueryDto) {
-    const { page = 1, limit = 10, role, search, isActive } = query;
+    const {
+      page = 1,
+      limit = 10,
+      role,
+      search,
+      isActive,
+      estado,
+      municipio,
+      tipoUsuario,
+    } = query;
     const skip = (page - 1) * limit;
 
     // Construir el filtro dinámicamente
@@ -54,7 +63,7 @@ export class AdminService {
       },
     };
 
-    // Si se envía isActive, filtrar por estado; si no, mostrar todos
+    // Si se envía isActive, filtrar por estado de cuenta; si no, mostrar todos
     if (isActive !== undefined) {
       where.isActive = isActive === 'true';
     }
@@ -63,11 +72,24 @@ export class AdminService {
       where.role = role;
     }
 
+    if (estado) {
+      where.estado = { contains: estado, mode: 'insensitive' };
+    }
+
+    if (municipio) {
+      where.municipio = { contains: municipio, mode: 'insensitive' };
+    }
+
+    if (tipoUsuario) {
+      where.tipoUsuario = tipoUsuario as TipoUsuario;
+    }
+
     if (search) {
-      where.email = {
-        contains: search,
-        mode: 'insensitive', // Búsqueda sin distinguir mayúsculas/minúsculas
-      };
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { nombre: { contains: search, mode: 'insensitive' } },
+        { apellido: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
     // Ejecutar dos consultas: una para el conteo total y otra para los datos
@@ -84,6 +106,9 @@ export class AdminService {
           apellido: true,
           role: true,
           telefono: true,
+          estado: true,
+          municipio: true,
+          tipoUsuario: true,
           isEmailVerified: true,
           isActive: true,
           profileCompleted: true,

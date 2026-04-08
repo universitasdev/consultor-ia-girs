@@ -54,4 +54,26 @@ export class GetUsersQueryDto {
   @IsOptional()
   @IsBooleanString()
   isActive?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por estado geográfico (ej: Miranda)',
+  })
+  @IsOptional()
+  @IsString()
+  estado?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por municipio (ej: Sucre)',
+  })
+  @IsOptional()
+  @IsString()
+  municipio?: string;
+
+  @ApiPropertyOptional({
+    enum: ['SERVIDOR_PUBLICO', 'ASESOR_PRIVADO'],
+    description: 'Filtrar por tipo de usuario',
+  })
+  @IsOptional()
+  @IsString() // No usamos @IsEnum(TipoUsuario) para evitar dependencias circulares complejas o errores si el enum no está disponible aquí directamente, pero Prisma lo validará.
+  tipoUsuario?: string;
 }

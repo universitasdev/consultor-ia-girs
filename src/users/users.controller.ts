@@ -65,9 +65,20 @@ export class UsersController {
     description: 'No autorizado.',
   })
   async getProfile(@GetUser() user: User) {
-    // Llama al servicio para obtener el usuario con su perfil incluido
     const userWithProfile = await this.usersService.findOneById(user.id);
-    return userWithProfile;
+
+    if (!userWithProfile) return null;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, profile, tipoUsuario, ...userData } = userWithProfile;
+
+    return {
+      ...userData,
+      tipo_usuario: tipoUsuario,
+      nombre_ente: profile?.nombreEnte || null,
+      cargo: profile?.cargo || null,
+      estatus_normativa_girs: profile?.estatusNormativaGirs || null,
+    };
   }
 
   @Patch('profile')

@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service'; // <-- 1. Importa Prisma
 import { UserRole, Prisma, TipoUsuario } from '@prisma/client';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
+import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
 
 @Injectable()
 export class AdminService {
@@ -207,6 +208,40 @@ export class AdminService {
     };
   }
 
+  // 8.5 Actualizar Estado de Cuenta manualmente
+  async updateEstadoCuenta(id: string, dto: UpdateEstadoCuentaDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado.`);
+    }
+
+    const dataToUpdate: Prisma.UserUpdateInput = {
+      estadoCuenta: dto.estadoCuenta,
+    };
+
+    if (dto.fechaVencimientoAcceso) {
+      dataToUpdate.fechaVencimientoAcceso = new Date(
+        dto.fechaVencimientoAcceso,
+      );
+    } // Nota: Si envían explícitamente null en el DTO, se podría procesar, pero por ahora lo dejamos simple.
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: dataToUpdate,
+      select: {
+        id: true,
+        email: true,
+        estadoCuenta: true,
+        fechaVencimientoAcceso: true,
+      },
+    });
+
+    return {
+      message: 'Estado de cuenta actualizado manualmente.',
+      user: updatedUser,
+    };
+  }
+
   // 9. Soft delete individual (libera email, no permite eliminar admins)
   async softDeleteUser(id: string) {
     const user = await this.prisma.user.findUnique({
@@ -282,6 +317,8 @@ export class AdminService {
 
   // 11. Métricas del dashboard
   async getDashboardMetrics() {
+    const umbral48Horas = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
     const [
       totalUsers,
       activeUsers,
@@ -292,6 +329,7 @@ export class AdminService {
       totalChatMessages,
       totalChatSessions,
       recentUsers,
+      usuariosPorVencer,
     ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({ where: { isActive: true } }),
@@ -319,6 +357,22 @@ export class AdminService {
           createdAt: true,
         },
       }),
+      this.prisma.user.findMany({
+        where: {
+          estadoCuenta: 'PRUEBA_GRATUITA',
+          fechaVencimientoAcceso: {
+            lte: umbral48Horas,
+          },
+        },
+        select: {
+          id: true,
+          email: true,
+          nombre: true,
+          tipoUsuario: true,
+          fechaVencimientoAcceso: true,
+        },
+        orderBy: { fechaVencimientoAcceso: 'asc' },
+      }),
     ]);
 
     return {
@@ -336,6 +390,10 @@ export class AdminService {
       chat: {
         totalMessages: totalChatMessages,
         totalSessions: totalChatSessions.length,
+      },
+      alertas: {
+        proximosAVencer: usuariosPorVencer,
+        cantidadVencimientos: usuariosPorVencer.length,
       },
       recentUsers,
     };

@@ -572,4 +572,72 @@ export class EmailService {
       html: htmlContent,
     });
   }
+
+  // --- NUEVAS ALERTAS DE VENCIMIENTO PARA CRM ---
+
+  /**
+   * Alerta de 48 horas previo al vencimiento
+   */
+  async sendTrialEndingReminder(to: string, userName: string, tipoUsuario: string) {
+    let subject = '⚠️ Tu acceso de prueba finaliza pronto';
+    let htmlContent = '';
+
+    if (tipoUsuario === 'SERVIDOR_PUBLICO') {
+      subject = '⏳ Quedan 2 días para regularizar tu documentación (Consultor IA)';
+      htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Hola ${userName},</h2>
+          <p>Te recordamos que tu acceso al Consultor IA finaliza en <strong>48 horas</strong> debido a que tu documentación institucional aún no está validada.</p>
+          <p>Por favor, ponte en contacto con nosotros o envía la documentación pertinente.</p>
+        </div>
+      `;
+    } else {
+      subject = '⏳ Quedan 2 días de tu Prueba Gratuita (Consultor IA)';
+      htmlContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Hola ${userName},</h2>
+          <p>Esperamos que estés aprovechando el Consultor IA. Tu prueba gratuita finaliza en <strong>48 horas</strong>.</p>
+          <p>Para seguir teniendo acceso sin interrupciones, te invitamos a realizar el pago de tu suscripción.</p>
+        </div>
+      `;
+    }
+
+    try {
+      await this.resend.emails.send({
+        from: `Consultor IA <${this.fromEmail}>`,
+        to: [to],
+        subject: subject,
+        html: htmlContent,
+      });
+    } catch (error) {
+      console.error(`Error enviando email TrialEndingReminder a ${to}:`, error);
+    }
+  }
+
+  /**
+   * Alerta definitiva de acceso expirado
+   */
+  async sendAccessExpiredEmail(to: string, userName: string, tipoUsuario: string) {
+    const isPublic = tipoUsuario === 'SERVIDOR_PUBLICO';
+    const subject = isPublic ? '🚫 Tu cuenta ha sido suspendida' : '🔒 Tu Prueba Gratuita ha finalizado';
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Hola ${userName},</h2>
+        <p>${isPublic ? 'Tu tiempo límite para validar tu cuenta institucional ha expirado. Tu cuenta se encuentra temporalmente suspendida.' : 'Tu periodo de prueba ha llegado a su fin y tu cuenta requiere pago para continuar.'}</p>
+        <p>Aún puedes recuperar acceso a las herramientas del Consultor IA completando los requisitos correspondientes.</p>
+      </div>
+    `;
+
+    try {
+      await this.resend.emails.send({
+        from: `Consultor IA <${this.fromEmail}>`,
+        to: [to],
+        subject: subject,
+        html: htmlContent,
+      });
+    } catch (error) {
+      console.error(`Error enviando email AccessExpiredEmail a ${to}:`, error);
+    }
+  }
 }
+

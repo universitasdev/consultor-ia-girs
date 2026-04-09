@@ -28,6 +28,7 @@ import {
 import { UpdateUserRoleDto } from './dto/update-role.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { BulkDeleteUsersDto } from './dto/bulk-delete.dto';
+import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -57,6 +58,19 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
   toggleUserActive(@Param('id') id: string) {
     return this.adminService.toggleUserActive(id);
+  }
+
+  @Patch('users/:id/estado-cuenta')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Actualizar manualmente el estado de la cuenta' })
+  @ApiResponse({ status: 200, description: 'Estado actualizado.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  updateEstadoCuenta(
+    @Param('id') id: string,
+    @Body() dto: UpdateEstadoCuentaDto,
+  ) {
+    return this.adminService.updateEstadoCuenta(id, dto);
   }
 
   @Delete('users/:id')

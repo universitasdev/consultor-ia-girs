@@ -69,11 +69,43 @@ export class UsersController {
 
     if (!userWithProfile) return null;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, profile, tipoUsuario, ...userData } = userWithProfile;
+    const {
+      password: _,
+      profile,
+      tipoUsuario,
+      estadoCuenta,
+      fechaVencimientoAcceso,
+      ...userData
+    } = userWithProfile;
+
+    let alertaVencimiento: { mensaje: string; diasRestantes: number } | null =
+      null;
+    if (
+      fechaVencimientoAcceso &&
+      (estadoCuenta === 'PRUEBA_GRATUITA' || estadoCuenta === 'POR_RENOVAR')
+    ) {
+      const hoy = new Date();
+      const vencimiento = new Date(fechaVencimientoAcceso);
+      const diferenciaDias = Math.ceil(
+        (vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (diferenciaDias <= 2) {
+        alertaVencimiento = {
+          mensaje:
+            diferenciaDias < 0
+              ? 'Tu acceso ha expirado. Por favor, regulariza tu cuenta.'
+              : `Tu comprobación finaliza en ${diferenciaDias} día(s).`,
+          diasRestantes: diferenciaDias,
+        };
+      }
+    }
 
     return {
       ...userData,
+      estadoCuenta,
+      fechaVencimientoAcceso,
+      alertaVencimiento,
       tipo_usuario: tipoUsuario,
       nombre_ente: profile?.nombreEnte || null,
       cargo: profile?.cargo || null,

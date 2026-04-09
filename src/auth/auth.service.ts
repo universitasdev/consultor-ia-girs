@@ -12,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
-import { User, UserRole } from '@prisma/client';
+import { User, UserRole, EstadoCuenta } from '@prisma/client';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
@@ -246,15 +246,24 @@ export class AuthService {
       `[confirmEmail] Usuario ${user.id} encontrado para el token. Actualizando...`,
     );
 
+    const sieteDiasDesdeHoy = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         isEmailVerified: true,
         confirmationToken: null,
+        estadoCuenta: EstadoCuenta.PRUEBA_GRATUITA,
+        fechaVencimientoAcceso: sieteDiasDesdeHoy,
       },
     });
-    console.log(`[confirmEmail] Usuario ${user.id} verificado.`);
-    return { message: 'Correo electrónico verificado exitosamente.' };
+    console.log(
+      `[confirmEmail] Usuario ${user.id} verificado. Prueba de 7 días iniciada.`,
+    );
+    return {
+      message:
+        'Correo electrónico verificado exitosamente. Se han activado 7 días de acceso de prueba.',
+    };
   }
 
   /**

@@ -1,5 +1,12 @@
 // src/admin/dto/get-users-query.dto.ts
-import { IsOptional, IsEnum, IsString, IsInt, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsInt,
+  Min,
+  IsBooleanString,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserRole } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
@@ -39,4 +46,34 @@ export class GetUsersQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Filtrar por estado: true = activos, false = desactivados/eliminados. Si no se envía, muestra todos.',
+  })
+  @IsOptional()
+  @IsBooleanString()
+  isActive?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por estado geográfico (ej: Miranda)',
+  })
+  @IsOptional()
+  @IsString()
+  estado?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por municipio (ej: Sucre)',
+  })
+  @IsOptional()
+  @IsString()
+  municipio?: string;
+
+  @ApiPropertyOptional({
+    enum: ['SERVIDOR_PUBLICO', 'ASESOR_PRIVADO'],
+    description: 'Filtrar por tipo de usuario',
+  })
+  @IsOptional()
+  @IsString() // No usamos @IsEnum(TipoUsuario) para evitar dependencias circulares complejas o errores si el enum no está disponible aquí directamente, pero Prisma lo validará.
+  tipoUsuario?: string;
 }

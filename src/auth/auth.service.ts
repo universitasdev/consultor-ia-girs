@@ -12,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
-import { User, UserRole } from '@prisma/client';
+import { User, UserRole, EstadoCuenta } from '@prisma/client';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
@@ -98,7 +98,19 @@ export class AuthService {
   async register(
     createAuthDto: CreateAuthDto,
   ): Promise<Omit<User, 'password'>> {
-    const { email, password, nombre, apellido, telefono } = createAuthDto;
+    const {
+      email,
+      password,
+      nombre,
+      apellido,
+      telefono,
+      estado,
+      municipio,
+      tipo_usuario,
+      nombre_ente,
+      cargo,
+      estatus_normativa_girs,
+    } = createAuthDto;
     console.log(`[register] Intentando registrar usuario: ${email}`);
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
@@ -118,7 +130,21 @@ export class AuthService {
         nombre,
         apellido,
         telefono,
+        estado,
+        municipio,
+        tipoUsuario: tipo_usuario,
         confirmationToken: confirmationToken,
+        profileCompleted: true, // Se marca como completado porque se hace en el registro
+        profile: {
+          create: {
+            nombreEnte: nombre_ente,
+            cargo: (cargo as string) === '' ? null : cargo,
+            estatusNormativaGirs:
+              (estatus_normativa_girs as any) === ''
+                ? null
+                : estatus_normativa_girs,
+          },
+        },
       },
     });
     console.log(`[register] Usuario ${email} creado con ID: ${newUser.id}`);
@@ -220,15 +246,24 @@ export class AuthService {
       `[confirmEmail] Usuario ${user.id} encontrado para el token. Actualizando...`,
     );
 
+    const sieteDiasDesdeHoy = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         isEmailVerified: true,
         confirmationToken: null,
+        estadoCuenta: EstadoCuenta.PRUEBA_GRATUITA,
+        fechaVencimientoAcceso: sieteDiasDesdeHoy,
       },
     });
-    console.log(`[confirmEmail] Usuario ${user.id} verificado.`);
-    return { message: 'Correo electrónico verificado exitosamente.' };
+    console.log(
+      `[confirmEmail] Usuario ${user.id} verificado. Prueba de 7 días iniciada.`,
+    );
+    return {
+      message:
+        'Correo electrónico verificado exitosamente. Se han activado 7 días de acceso de prueba.',
+    };
   }
 
   /**

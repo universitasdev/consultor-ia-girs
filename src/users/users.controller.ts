@@ -65,9 +65,52 @@ export class UsersController {
     description: 'No autorizado.',
   })
   async getProfile(@GetUser() user: User) {
-    // Llama al servicio para obtener el usuario con su perfil incluido
     const userWithProfile = await this.usersService.findOneById(user.id);
-    return userWithProfile;
+
+    if (!userWithProfile) return null;
+
+    const {
+      password: _,
+      profile,
+      tipoUsuario,
+      estadoCuenta,
+      fechaVencimientoAcceso,
+      ...userData
+    } = userWithProfile;
+
+    let alertaVencimiento: { mensaje: string; diasRestantes: number } | null =
+      null;
+    if (
+      fechaVencimientoAcceso &&
+      (estadoCuenta === 'PRUEBA_GRATUITA' || estadoCuenta === 'POR_RENOVAR')
+    ) {
+      const hoy = new Date();
+      const vencimiento = new Date(fechaVencimientoAcceso);
+      const diferenciaDias = Math.ceil(
+        (vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (diferenciaDias <= 2) {
+        alertaVencimiento = {
+          mensaje:
+            diferenciaDias < 0
+              ? 'Tu acceso ha expirado. Por favor, regulariza tu cuenta.'
+              : `Tu comprobación finaliza en ${diferenciaDias} día(s).`,
+          diasRestantes: diferenciaDias,
+        };
+      }
+    }
+
+    return {
+      ...userData,
+      estadoCuenta,
+      fechaVencimientoAcceso,
+      alertaVencimiento,
+      tipo_usuario: tipoUsuario,
+      nombre_ente: profile?.nombreEnte || null,
+      cargo: profile?.cargo || null,
+      estatus_normativa_girs: profile?.estatusNormativaGirs || null,
+    };
   }
 
   @Patch('profile')

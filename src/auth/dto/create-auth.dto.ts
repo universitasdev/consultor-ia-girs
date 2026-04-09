@@ -1,6 +1,15 @@
 // src/auth/dto/create-auth.dto.ts
-import { ApiProperty } from '@nestjs/swagger'; // <-- 1. Importa ApiProperty
-import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  IsOptional,
+  IsEnum,
+  ValidateIf,
+  IsNotEmpty,
+} from 'class-validator';
+import { TipoUsuario, EstatusNormativaGIRS } from '@prisma/client';
 
 export class CreateAuthDto {
   @ApiProperty({
@@ -39,4 +48,44 @@ export class CreateAuthDto {
   @IsString()
   @IsOptional()
   telefono?: string;
+
+  @ApiProperty({ example: 'Miranda' })
+  @IsString()
+  @IsNotEmpty()
+  estado: string;
+
+  @ApiProperty({ example: 'Sucre' })
+  @IsString()
+  @IsNotEmpty()
+  municipio: string;
+
+  @ApiProperty({ enum: TipoUsuario, example: TipoUsuario.SERVIDOR_PUBLICO })
+  @IsEnum(TipoUsuario, {
+    message: 'tipo_usuario debe ser SERVIDOR_PUBLICO o ASESOR_PRIVADO',
+  })
+  tipo_usuario: TipoUsuario;
+
+  @ApiProperty({ example: 'Ministerio de Ecosocialismo' })
+  @IsString()
+  @IsNotEmpty({ message: 'El nombre_ente es obligatorio' })
+  nombre_ente: string;
+
+  @ApiProperty({ example: 'Director General', required: false })
+  @ValidateIf((o) => o.tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO)
+  @IsString()
+  @IsNotEmpty({ message: 'El cargo es obligatorio para servidores públicos' })
+  @IsOptional() // Permitir que sea null o undefined si el ValidateIf es falso
+  cargo?: string;
+
+  @ApiProperty({
+    enum: EstatusNormativaGIRS,
+    example: EstatusNormativaGIRS.VIGENTE,
+    required: false,
+  })
+  @ValidateIf((o) => o.tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO)
+  @IsEnum(EstatusNormativaGIRS, {
+    message: 'El estatus debe ser VIGENTE, EN_MORA o EN_REVISION',
+  })
+  @IsOptional() // Permitir que sea null o undefined si el ValidateIf es falso
+  estatus_normativa_girs?: EstatusNormativaGIRS;
 }

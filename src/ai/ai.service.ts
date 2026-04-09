@@ -18,23 +18,26 @@ export class AiService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    const keyFilename = this.configService.get<string>(
-      'GOOGLE_APPLICATION_CREDENTIALS',
-    );
     const projectId = this.configService.get<string>('DIALOGFLOW_PROJECT_ID');
     const location = this.configService.get<string>('DIALOGFLOW_LOCATION');
     const agentId = this.configService.get<string>('DIALOGFLOW_AGENT_ID');
 
-    if (!keyFilename || !projectId || !location || !agentId) {
+    if (!projectId || !location || !agentId) {
       throw new Error(
-        'Faltan variables de entorno necesarias para Dialogflow CX.',
+        'Faltan variables de entorno necesarias para Dialogflow CX (PROJECT_ID, LOCATION o AGENT_ID).',
       );
     }
 
     this.projectId = projectId;
     this.location = location;
     this.agentId = agentId;
-    this.sessionsClient = new SessionsClient({ keyFilename });
+
+    const keyFilename = this.configService.get<string>(
+      'GOOGLE_APPLICATION_CREDENTIALS',
+    );
+    this.sessionsClient = new SessionsClient(
+      keyFilename ? { keyFilename } : undefined,
+    );
   }
 
   async detectIntentText(text: string, sessionId: string): Promise<string> {
@@ -111,7 +114,7 @@ export class AiService {
         profile: {
           select: {
             cargo: true,
-            institucion: true,
+            nombreEnte: true,
           },
         },
         _count: {
@@ -151,7 +154,7 @@ export class AiService {
           nombreCompleto: `${user.nombre} ${user.apellido || ''}`.trim(),
           telefono: user.telefono,
           cargo: user.profile?.cargo,
-          institucion: user.profile?.institucion,
+          institucion: user.profile?.nombreEnte,
           totalMensajes: user._count.chatHistory,
           totalSesiones: sesiones.length,
           ultimoMensaje: {
@@ -196,7 +199,7 @@ export class AiService {
         profile: {
           select: {
             cargo: true,
-            institucion: true,
+            nombreEnte: true,
           },
         },
       },
@@ -273,7 +276,7 @@ export class AiService {
         nombreCompleto: `${user.nombre} ${user.apellido || ''}`.trim(),
         telefono: user.telefono,
         cargo: user.profile?.cargo,
-        institucion: user.profile?.institucion,
+        institucion: user.profile?.nombreEnte,
       },
       totalMensajes: mensajesPlanos.length,
       totalSesiones: sesionesUnicas.length,

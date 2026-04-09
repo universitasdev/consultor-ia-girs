@@ -38,6 +38,8 @@ async function bootstrap() {
       'https://admin.actadeentrega.site',
       'https://app.actadeentrega.online',
       'https://admin.actadeentrega.online',
+      'https://ia.girs.universitas.legal',
+      'https://admin-girs.netlify.app',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

@@ -93,7 +93,8 @@ export class UsersService {
     userId: string,
     completeProfileDto: CompleteProfileDto,
   ) {
-    const { institucion, cargo, plazoEntregaActa } = completeProfileDto;
+    const { nombre_ente, cargo, estatus_normativa_girs, plazoEntregaActa } =
+      completeProfileDto;
 
     // Verifica si el usuario ya tiene un perfil
     const profile = await this.prisma.$transaction(async (tx) => {
@@ -104,14 +105,16 @@ export class UsersService {
         where: { userId: userId },
         update: {
           // Qué hacer si SÍ existe
-          institucion,
+          nombreEnte: nombre_ente,
           cargo,
+          estatusNormativaGirs: estatus_normativa_girs,
           plazoEntregaActa,
         },
         create: {
           // Qué hacer si NO existe
-          institucion,
+          nombreEnte: nombre_ente,
           cargo,
+          estatusNormativaGirs: estatus_normativa_girs,
           plazoEntregaActa,
           userId: userId, // Conecta directamente con el ID del usuario
         },

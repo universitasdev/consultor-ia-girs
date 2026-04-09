@@ -17,6 +17,27 @@ enum UserRole {
   PAID_USER // Usuario pago (Pro)
   ADMIN     // Administrador
 }
+
+enum TipoUsuario {
+  SERVIDOR_PUBLICO
+  ASESOR_PRIVADO
+}
+
+enum EstatusNormativaGIRS {
+  VIGENTE
+  EN_MORA
+  EN_REVISION
+}
+
+enum EstadoCuenta {
+  POR_ACTIVAR
+  PRUEBA_GRATUITA
+  ACTIVO
+  SUSPENDIDO
+  POR_PAGAR
+  POR_RENOVAR
+  SUSCRITO
+}
 // 3. --- Definición de tus Modelos (Tablas) ---
 
 model User {
@@ -36,6 +57,15 @@ model User {
   otpExpiresAt       DateTime?
 
   telefono          String?   // AÑADIDO
+  estado            String?
+  municipio         String?
+  tipoUsuario       TipoUsuario? @map("tipo_usuario")
+
+  // Ciclo de Vida y Suscripciones
+  estadoCuenta            EstadoCuenta @default(POR_ACTIVAR) @map("estado_cuenta")
+  fechaVencimientoAcceso  DateTime?    @map("fecha_vencimiento_acceso")
+  documentacionValidada   Boolean      @default(false) @map("documentacion_validada")
+  pagoRealizado           Boolean      @default(false) @map("pago_realizado")
 
   createdAt         DateTime  @default(now()) @map("created_at") // AÑADIDO
   updatedAt         DateTime  @updatedAt @map("updated_at")
@@ -44,13 +74,15 @@ model User {
   profile     UserProfile? 
   profileCompleted Boolean @default(false)
   chatHistory ChatHistory[] // Un usuario puede tener muchos historiales de chat
+  crmNotes    CrmNote[]     // Notas dejadas por administradores
 }
 
 model UserProfile {
   id               String  @id @default(uuid())
-  institucion      String
-  cargo            String
+  nombreEnte       String  @map("nombre_ente")
+  cargo            String?
   plazoEntregaActa String? @map("plazo_entrega_acta")
+  estatusNormativaGirs EstatusNormativaGIRS? @map("estatus_normativa_girs")
 
   // Relación uno a uno con el usuario
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -76,3 +108,15 @@ model TokenDenylist {
   token  String   @db.Text
   expiry DateTime
 }
+
+model CrmNote {
+  id          String   @id @default(uuid())
+  content     String   @db.Text
+  adminId     String   @map("admin_id") // Guardamos el ID del admin que la creó, sin FK estricta
+  adminNombre String   @map("admin_nombre") // Nombre del admin como respaldo
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relación con el usuario cliente al que pertenece la nota
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+}

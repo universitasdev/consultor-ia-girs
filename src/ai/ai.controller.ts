@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SubscriptionGuard } from '../auth/guards/subscription.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -28,7 +29,7 @@ import {
 @ApiTags('Chatbot AI') // <-- Agrupa bajo "Chatbot AI"
 @ApiBearerAuth()
 @Controller('ai')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SubscriptionGuard)
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 

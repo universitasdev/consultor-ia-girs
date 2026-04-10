@@ -54,6 +54,7 @@ export class AdminService {
       estado,
       municipio,
       tipoUsuario,
+      estadoCuenta,
     } = query;
     const skip = (page - 1) * limit;
 
@@ -85,6 +86,10 @@ export class AdminService {
       where.tipoUsuario = tipoUsuario as TipoUsuario;
     }
 
+    if (estadoCuenta) {
+      where.estadoCuenta = estadoCuenta;
+    }
+
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
@@ -113,6 +118,8 @@ export class AdminService {
           isEmailVerified: true,
           isActive: true,
           profileCompleted: true,
+          estadoCuenta: true,
+          fechaVencimientoAcceso: true,
           createdAt: true,
           updatedAt: true,
           // Excluimos password explícitamente al no seleccionarlo
@@ -285,7 +292,13 @@ export class AdminService {
   async getUserConversations(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, nombre: true, apellido: true },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        apellido: true,
+        estadoCuenta: true,
+      },
     });
 
     if (!user) {
@@ -317,6 +330,20 @@ export class AdminService {
 
   // 11. Métricas del dashboard
   async getDashboardMetrics() {
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const prev7Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const prev14Days = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000);
+    const prev21Days = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
+    const prev28Days = new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000);
+    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const prev30Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
     const umbral48Horas = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
     const [
@@ -330,6 +357,22 @@ export class AdminService {
       totalChatSessions,
       recentUsers,
       usuariosPorVencer,
+      usersByEstadoCuenta,
+      totalServidoresPublicos,
+      totalAsesoresPrivados,
+      totalSuscritosActivos,
+      suspensionesRecientes,
+      usuariosHoy,
+      usuariosSemanaActual,
+      usuariosSemanaAnterior,
+      usuariosMesActual,
+      usuariosMesAnterior,
+      // Datos para gráfico de barras (últimas 5 semanas)
+      semana1,
+      semana2,
+      semana3,
+      semana4,
+      semana5,
     ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({ where: { isActive: true } }),
@@ -353,7 +396,8 @@ export class AdminService {
           email: true,
           nombre: true,
           apellido: true,
-          role: true,
+          tipoUsuario: true,
+          estadoCuenta: true,
           createdAt: true,
         },
       }),
@@ -373,6 +417,42 @@ export class AdminService {
         },
         orderBy: { fechaVencimientoAcceso: 'asc' },
       }),
+      this.prisma.user.groupBy({
+        by: ['estadoCuenta'],
+        _count: { estadoCuenta: true },
+      }),
+      this.prisma.user.count({ where: { tipoUsuario: 'SERVIDOR_PUBLICO' } }),
+      this.prisma.user.count({ where: { tipoUsuario: 'ASESOR_PRIVADO' } }),
+      this.prisma.user.count({
+        where: { estadoCuenta: 'SUSCRITO', isActive: true },
+      }),
+      this.prisma.user.count({
+        where: { estadoCuenta: 'SUSPENDIDO', updatedAt: { gte: last30Days } },
+      }),
+      // Comparativa
+      this.prisma.user.count({ where: { createdAt: { gte: startOfToday } } }),
+      this.prisma.user.count({ where: { createdAt: { gte: last7Days } } }),
+      this.prisma.user.count({
+        where: { createdAt: { gte: prev7Days, lt: last7Days } },
+      }),
+      this.prisma.user.count({ where: { createdAt: { gte: last30Days } } }),
+      this.prisma.user.count({
+        where: { createdAt: { gte: prev30Days, lt: last30Days } },
+      }),
+      // Semanas para gráfico
+      this.prisma.user.count({ where: { createdAt: { gte: last7Days } } }),
+      this.prisma.user.count({
+        where: { createdAt: { gte: prev7Days, lt: last7Days } },
+      }),
+      this.prisma.user.count({
+        where: { createdAt: { gte: prev14Days, lt: prev7Days } },
+      }),
+      this.prisma.user.count({
+        where: { createdAt: { gte: prev21Days, lt: prev14Days } },
+      }),
+      this.prisma.user.count({
+        where: { createdAt: { gte: prev28Days, lt: prev21Days } },
+      }),
     ]);
 
     return {
@@ -386,6 +466,10 @@ export class AdminService {
           role: r.role,
           count: r._count.role,
         })),
+        byEstadoCuenta: usersByEstadoCuenta.map((e) => ({
+          estado: e.estadoCuenta,
+          count: e._count.estadoCuenta,
+        })),
       },
       chat: {
         totalMessages: totalChatMessages,
@@ -396,6 +480,34 @@ export class AdminService {
         cantidadVencimientos: usuariosPorVencer.length,
       },
       recentUsers,
+
+      // Nueva sección de analíticas
+      analytics: {
+        porTipousuario: {
+          servidoresPublicos: totalServidoresPublicos,
+          asesoresPrivados: totalAsesoresPrivados,
+        },
+        cuentasSuscritasActivas: totalSuscritosActivos,
+        suspensionesRecientes: suspensionesRecientes,
+        crecimientoHoy: usuariosHoy,
+        comparativa: {
+          semanal: {
+            actual: usuariosSemanaActual,
+            anterior: usuariosSemanaAnterior,
+          },
+          mensual: {
+            actual: usuariosMesActual,
+            anterior: usuariosMesAnterior,
+          },
+        },
+        graficoCrecimiento: [
+          { etiqueta: 'Seman 1', cantidad: semana1 },
+          { etiqueta: 'Semana 2', cantidad: semana2 },
+          { etiqueta: 'Semana 3', cantidad: semana3 },
+          { etiqueta: 'Semana 4', cantidad: semana4 },
+          { etiqueta: 'Semana 5', cantidad: semana5 },
+        ].reverse(), // Invertir para que la última semana sea la más reciente a la derecha
+      },
     };
   }
 }

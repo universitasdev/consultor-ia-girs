@@ -8,7 +8,7 @@ import {
   IsBooleanString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UserRole } from '@prisma/client';
+import { UserRole, EstadoCuenta } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GetUsersQueryDto {
@@ -76,4 +76,12 @@ export class GetUsersQueryDto {
   @IsOptional()
   @IsString() // No usamos @IsEnum(TipoUsuario) para evitar dependencias circulares complejas o errores si el enum no está disponible aquí directamente, pero Prisma lo validará.
   tipoUsuario?: string;
+
+  @ApiPropertyOptional({
+    enum: EstadoCuenta,
+    description: 'Filtrar por estado de la cuenta',
+  })
+  @IsOptional()
+  @IsEnum(EstadoCuenta)
+  estadoCuenta?: EstadoCuenta;
 }

@@ -26,15 +26,15 @@ export class TasksService {
       'Ejecutando tarea programada: Limpieza de usuarios no verificados...',
     );
 
-    // 1. Calcula la fecha límite (usuarios creados hace más de 5 minutos)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    // 1. Calcula la fecha límite (usuarios creados hace más de 7 días)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     // 2. Busca los usuarios que cumplen las condiciones
     const usersToDelete = await this.prisma.user.findMany({
       where: {
         isEmailVerified: false, // No han verificado su correo
         createdAt: {
-          lt: fiveMinutesAgo, // Fueron creados antes de hace 5 minutos
+          lt: sevenDaysAgo, // Fueron creados antes de hace 7 días
         },
       },
       select: {

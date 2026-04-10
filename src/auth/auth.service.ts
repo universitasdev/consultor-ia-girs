@@ -12,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
-import { User, UserRole, EstadoCuenta } from '@prisma/client';
+import { User, UserRole, EstadoCuenta, TipoUsuario } from '@prisma/client';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import * as crypto from 'crypto';
 import { EmailService } from '../email/email.service';
@@ -123,6 +123,12 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 10);
     const confirmationToken = crypto.randomBytes(32).toString('hex');
 
+    // Determinamos el estado inicial según el tipo de usuario
+    const initialEstado =
+      tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO
+        ? EstadoCuenta.ACTIVO
+        : EstadoCuenta.PRUEBA_GRATUITA;
+
     const newUser = await this.prisma.user.create({
       data: {
         email,
@@ -133,6 +139,7 @@ export class AuthService {
         estado,
         municipio,
         tipoUsuario: tipo_usuario,
+        estadoCuenta: initialEstado, // Asignamos el estado calculado
         confirmationToken: confirmationToken,
         profileCompleted: true, // Se marca como completado porque se hace en el registro
         profile: {
@@ -253,8 +260,10 @@ export class AuthService {
       data: {
         isEmailVerified: true,
         confirmationToken: null,
-        estadoCuenta: EstadoCuenta.PRUEBA_GRATUITA,
-        fechaVencimientoAcceso: sieteDiasDesdeHoy,
+        // Solo asignamos los 7 días de prueba si el usuario es de tipo PRUEBA_GRATUITA
+        ...(user.estadoCuenta === EstadoCuenta.PRUEBA_GRATUITA && {
+          fechaVencimientoAcceso: sieteDiasDesdeHoy,
+        }),
       },
     });
     console.log(

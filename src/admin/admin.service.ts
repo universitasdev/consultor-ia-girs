@@ -396,7 +396,7 @@ export class AdminService {
           email: true,
           nombre: true,
           apellido: true,
-          role: true,
+          tipoUsuario: true,
           estadoCuenta: true,
           createdAt: true,
         },

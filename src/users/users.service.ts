@@ -22,10 +22,46 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    // Llama a Prisma para actualizar el usuario en la base de datos
+    const {
+      nombre_ente,
+      cargo,
+      estatus_normativa_girs,
+      plazoEntregaActa,
+      ...userData
+    } = updateUserDto;
+
+    // Llama a Prisma para actualizar el usuario y su perfil de forma anidada
     const updatedUser = await this.prisma.user.update({
       where: { id: id }, // Busca al usuario por su ID
-      data: updateUserDto, // Aplica los nuevos datos del DTO
+      data: {
+        ...userData,
+        // Realizamos un upsert anidado: si no existe el perfil lo crea, si existe lo actualiza
+        profile:
+          nombre_ente || cargo || estatus_normativa_girs || plazoEntregaActa
+            ? {
+                upsert: {
+                  create: {
+                    nombreEnte: nombre_ente || 'Ente por definir',
+                    cargo: cargo || null,
+                    estatusNormativaGirs: estatus_normativa_girs || null,
+                    plazoEntregaActa: plazoEntregaActa || null,
+                  },
+                  update: {
+                    ...(nombre_ente && { nombreEnte: nombre_ente }),
+                    ...(cargo && { cargo }),
+                    ...(estatus_normativa_girs && {
+                      estatusNormativaGirs: estatus_normativa_girs,
+                    }),
+                    ...(plazoEntregaActa && {
+                      plazoEntregaActa: plazoEntregaActa,
+                    }),
+                  },
+                },
+              }
+            : undefined,
+        // Si se proporciona el nombre del ente, marcamos el perfil como completado
+        ...(nombre_ente && { profileCompleted: true }),
+      },
     });
 
     // Usa el método estático para devolver el usuario actualizado sin la contraseña

@@ -83,7 +83,15 @@ export class DashboardMetricsResponseDto {
   @ApiProperty({ example: { proximosAVencer: [], cantidadVencimientos: 0 } })
   alertas: any;
 
-  @ApiProperty({ example: [] })
+  @ApiProperty({
+    example: [
+      {
+        email: 'user@example.com',
+        tipoUsuario: 'SERVIDOR_PUBLICO',
+        estadoCuenta: 'ACTIVO',
+      },
+    ],
+  })
   recentUsers: any[];
 
   @ApiProperty()

@@ -373,6 +373,7 @@ export class AdminService {
       semana3,
       semana4,
       semana5,
+      usuariosNoVerificados,
     ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({ where: { isActive: true } }),
@@ -453,6 +454,7 @@ export class AdminService {
       this.prisma.user.count({
         where: { createdAt: { gte: prev28Days, lt: prev21Days } },
       }),
+      this.prisma.user.count({ where: { isEmailVerified: false } }),
     ]);
 
     return {
@@ -490,6 +492,7 @@ export class AdminService {
         cuentasSuscritasActivas: totalSuscritosActivos,
         suspensionesRecientes: suspensionesRecientes,
         crecimientoHoy: usuariosHoy,
+        usuariosNoVerificados,
         comparativa: {
           semanal: {
             actual: usuariosSemanaActual,

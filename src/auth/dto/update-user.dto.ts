@@ -77,22 +77,7 @@ export class UpdateUserDto {
   @IsOptional()
   cargo?: string;
 
-  @ApiProperty({
-    required: false,
-    enum: EstatusNormativaGIRS,
-    example: EstatusNormativaGIRS.VIGENTE,
-    description: 'Estatus de la normativa GIRS',
-  })
   @IsEnum(EstatusNormativaGIRS)
   @IsOptional()
   estatus_normativa_girs?: EstatusNormativaGIRS;
-
-  @ApiProperty({
-    required: false,
-    example: '30 días',
-    description: 'Plazo pactado para la entrega del acta',
-  })
-  @IsString()
-  @IsOptional()
-  plazoEntregaActa?: string;
 }

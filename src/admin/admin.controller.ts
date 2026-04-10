@@ -29,6 +29,7 @@ import { UpdateUserRoleDto } from './dto/update-role.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { BulkDeleteUsersDto } from './dto/bulk-delete.dto';
 import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
+import { DashboardMetricsResponseDto } from './dto/dashboard-metrics-response.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -138,6 +139,7 @@ export class AdminController {
   @ApiResponse({
     status: 200,
     description: 'Métricas del dashboard recuperadas.',
+    type: DashboardMetricsResponseDto,
   })
   getDashboardMetrics() {
     return this.adminService.getDashboardMetrics();

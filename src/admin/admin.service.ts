@@ -3,11 +3,14 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // <-- 1. Importa Prisma
 import { UserRole, Prisma, TipoUsuario } from '@prisma/client';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
+import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
+import { UpdateCrmNoteDto } from './dto/update-crm-note.dto';
 
 @Injectable()
 export class AdminService {
@@ -149,7 +152,10 @@ export class AdminService {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
-        profile: true, // Incluimos el perfil para ver todos los detalles
+        profile: true,
+        crmNotes: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -504,13 +510,235 @@ export class AdminService {
           },
         },
         graficoCrecimiento: [
-          { etiqueta: 'Seman 1', cantidad: semana1 },
+          { etiqueta: 'Semana 1', cantidad: semana1 },
           { etiqueta: 'Semana 2', cantidad: semana2 },
           { etiqueta: 'Semana 3', cantidad: semana3 },
           { etiqueta: 'Semana 4', cantidad: semana4 },
           { etiqueta: 'Semana 5', cantidad: semana5 },
         ].reverse(), // Invertir para que la última semana sea la más reciente a la derecha
       },
+    };
+  }
+
+  // ==================== CRM: NOTAS Y ETIQUETAS ====================
+
+  /**
+   * 12. Crear una nota CRM con etiqueta opcional para un usuario.
+   * El adminId y adminNombre se obtienen del token JWT del administrador.
+   */
+  async createCrmNote(
+    adminId: string,
+    adminNombre: string,
+    userId: string,
+    dto: CreateCrmNoteDto,
+  ) {
+    // Verificar que el usuario destinatario existe
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
+    }
+
+    const note = await this.prisma.crmNote.create({
+      data: {
+        content: dto.content,
+        etiqueta: dto.etiqueta ?? null,
+        adminId,
+        adminNombre,
+        userId,
+      },
+    });
+
+    return {
+      message: 'Nota CRM creada exitosamente.',
+      note,
+    };
+  }
+
+  /**
+   * 13. Listar todas las notas CRM de un usuario (más reciente primero).
+   */
+  async getCrmNotes(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        nombre: true,
+        apellido: true,
+        email: true,
+        tipoUsuario: true,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
+    }
+
+    const notes = await this.prisma.crmNote.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      usuario: user,
+      totalNotas: notes.length,
+      notes,
+    };
+  }
+
+  /**
+   * 14. Editar el contenido y/o la etiqueta de una nota CRM existente.
+   */
+  async updateCrmNote(noteId: string, dto: UpdateCrmNoteDto) {
+    const note = await this.prisma.crmNote.findUnique({
+      where: { id: noteId },
+    });
+    if (!note) {
+      throw new NotFoundException(`Nota CRM con ID ${noteId} no encontrada.`);
+    }
+
+    if (!dto.content && dto.etiqueta === undefined) {
+      throw new BadRequestException(
+        'Debe enviar al menos un campo para actualizar (content o etiqueta).',
+      );
+    }
+
+    const updatedNote = await this.prisma.crmNote.update({
+      where: { id: noteId },
+      data: {
+        ...(dto.content !== undefined && { content: dto.content }),
+        ...(dto.etiqueta !== undefined && { etiqueta: dto.etiqueta }),
+      },
+    });
+
+    return {
+      message: 'Nota CRM actualizada exitosamente.',
+      note: updatedNote,
+    };
+  }
+
+  /**
+   * 15. Eliminar una nota CRM.
+   */
+  async deleteCrmNote(noteId: string) {
+    const note = await this.prisma.crmNote.findUnique({
+      where: { id: noteId },
+    });
+    if (!note) {
+      throw new NotFoundException(`Nota CRM con ID ${noteId} no encontrada.`);
+    }
+
+    await this.prisma.crmNote.delete({ where: { id: noteId } });
+
+    return { message: 'Nota CRM eliminada exitosamente.' };
+  }
+
+  /**
+   * 16. Listar TODAS las notas CRM del sistema (Global).
+   * Útil para que el administrador vea la actividad reciente de etiquetas.
+   */
+  async getAllCrmNotes() {
+    const notes = await this.prisma.crmNote.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            nombre: true,
+            apellido: true,
+            tipoUsuario: true,
+          },
+        },
+      },
+    });
+
+    return {
+      total: notes.length,
+      notes,
+    };
+  }
+
+  /**
+   * 17. Usuarios Asesores Privados con vencimiento próximo (7 días o menos).
+   */
+  async getExpiringPrivateAdvisors() {
+    const now = new Date();
+    const threshold = new Date();
+    threshold.setDate(now.getDate() + 7); // 7 días desde hoy
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        tipoUsuario: 'ASESOR_PRIVADO',
+        fechaVencimientoAcceso: {
+          not: null,
+          lte: threshold,
+          gte: new Date(now.getTime() - 24 * 60 * 60 * 1000), // Incluimos los que vencieron hoy mismo
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        apellido: true,
+        telefono: true,
+        estadoCuenta: true,
+        fechaVencimientoAcceso: true,
+      },
+      orderBy: {
+        fechaVencimientoAcceso: 'asc',
+      },
+    });
+
+    const result = users.map((user) => {
+      const remainingTime =
+        user.fechaVencimientoAcceso!.getTime() - now.getTime();
+      const diasRestantes = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+      return {
+        ...user,
+        diasRestantes: diasRestantes < 0 ? 0 : diasRestantes,
+      };
+    });
+
+    return {
+      total: result.length,
+      threshold: '7 días',
+      data: result,
+    };
+  }
+
+  /**
+   * 18. Convertir un usuario a Asesor Privado con 7 días de prueba gratis.
+   * Se usa cuando un usuario público o nuevo debe iniciar un ciclo de asesoría privada.
+   */
+  async convertToPrivateTrial(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
+    }
+
+    const now = new Date();
+    const expiresAt = new Date();
+    expiresAt.setDate(now.getDate() + 7); // 7 días de prueba desde ahora
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        tipoUsuario: 'ASESOR_PRIVADO',
+        estadoCuenta: 'PRUEBA_GRATUITA',
+        fechaVencimientoAcceso: expiresAt,
+      },
+      select: {
+        id: true,
+        email: true,
+        tipoUsuario: true,
+        estadoCuenta: true,
+        fechaVencimientoAcceso: true,
+      },
+    });
+
+    return {
+      message:
+        'Usuario convertido a Asesor Privado con 7 días de prueba gratis.',
+      user: updatedUser,
     };
   }
 }

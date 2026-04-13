@@ -38,6 +38,23 @@ enum EstadoCuenta {
   POR_RENOVAR
   SUSCRITO
 }
+
+// Etiquetas CRM para seguimiento administrativo de usuarios
+enum EtiquetaCrm {
+  // Compartidas (aplican a ambos tipos de usuario)
+  POR_CONTACTAR       // Pendiente de contacto inicial
+  CONTACTADO          // Ya fue contactado
+
+  // Asesor Privado
+  PAGO_REALIZADO      // El usuario ya realizó el pago
+
+  // Servidor Público (el pago es un documento enviado a marketing)
+  POR_ENVIAR_DOC          // Falta enviar documentación a marketing
+  ENVIO_DOC               // Documentación ya fue enviada
+  NO_TIENE_DOC            // El usuario no posee documentación
+  NO_ENVIO_DOC_PLANIFICAR // No envió doc, planificar con ejecutivos hasta confirmar
+}
+
 // 3. --- Definición de tus Modelos (Tablas) ---
 
 model User {
@@ -110,11 +127,13 @@ model TokenDenylist {
 }
 
 model CrmNote {
-  id          String   @id @default(uuid())
-  content     String   @db.Text
-  adminId     String   @map("admin_id") // Guardamos el ID del admin que la creó, sin FK estricta
-  adminNombre String   @map("admin_nombre") // Nombre del admin como respaldo
-  createdAt   DateTime @default(now()) @map("created_at")
+  id          String        @id @default(uuid())
+  content     String        @db.Text
+  etiqueta    EtiquetaCrm?  // Etiqueta opcional para clasificar la nota
+  adminId     String        @map("admin_id")     // ID del admin que la creó (sin FK estricta)
+  adminNombre String        @map("admin_nombre") // Nombre del admin como respaldo
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt           @map("updated_at")
 
   // Relación con el usuario cliente al que pertenece la nota
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -33,6 +33,7 @@ import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
 import { DashboardMetricsResponseDto } from './dto/dashboard-metrics-response.dto';
 import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
 import { UpdateCrmNoteDto } from './dto/update-crm-note.dto';
+import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -207,14 +208,21 @@ export class AdminController {
   @Get('users/:id/crm-notes')
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Listar todas las notas CRM de un usuario' })
+  @ApiOperation({
+    summary: 'Listar notas CRM de un usuario con paginación y filtros',
+    description:
+      'Permite ver los comentarios de un usuario específico usando página, límite y filtro por etiqueta.',
+  })
   @ApiResponse({
     status: 200,
     description: 'Notas CRM del usuario recuperadas.',
   })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
-  getCrmNotes(@Param('id') userId: string) {
-    return this.adminService.getCrmNotes(userId);
+  getCrmNotes(
+    @Param('id') userId: string,
+    @Query() query: GetCrmNotesQueryDto,
+  ) {
+    return this.adminService.getCrmNotes(userId, query);
   }
 
   @Patch('crm-notes/:noteId')
@@ -244,16 +252,17 @@ export class AdminController {
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Listar TODAS las notas CRM del sistema (Global)',
+    summary:
+      'Listar TODAS las notas CRM con paginación y filtro por etiqueta (Global)',
     description:
-      'Devuelve un historial cronológico de todas las etiquetas y comentarios dejados por admins.',
+      'Devuelve un historial cronológico con soporte para página, límite y filtrado por etiqueta.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista global de notas recuperada.',
+    description: 'Lista global de notas recuperada con metadatos.',
   })
-  getAllCrmNotes() {
-    return this.adminService.getAllCrmNotes();
+  getAllCrmNotes(@Query() query: GetCrmNotesQueryDto) {
+    return this.adminService.getAllCrmNotes(query);
   }
 
   @Get('users/notifications/expiring-private')
@@ -284,5 +293,49 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
   convertToPrivateTrial(@Param('id') id: string) {
     return this.adminService.convertToPrivateTrial(id);
+  }
+
+  @Get('users/notifications/private-trial-status')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reporte: Estado de prueba de TODOS los asesores privados',
+    description:
+      'Muestra a cada usuario de tipo privado con sus días restantes de prueba calculados.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Reporte de estados generado exitosamente.',
+  })
+  getPrivateAdvisorsTrialStatus() {
+    return this.adminService.getPrivateAdvisorsTrialStatus();
+  }
+
+  @Get('users/:id/trial-status')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Estado de prueba de un usuario específico',
+    description:
+      'Obtiene los días restantes de prueba para un usuario por su ID.',
+  })
+  @ApiResponse({ status: 200, description: 'Estado de prueba recuperado.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  getUserTrialStatus(@Param('id') id: string) {
+    return this.adminService.getUserTrialStatus(id);
+  }
+
+  @Patch('users/:id/convert-to-public')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Convertir usuario a Servidor Público Activo',
+    description:
+      'Cambia el tipo a SERVIDOR_PUBLICO, el estado a ACTIVO y elimina la fecha de vencimiento.',
+  })
+  @ApiResponse({ status: 200, description: 'Usuario convertido exitosamente.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  convertToPublic(@Param('id') id: string) {
+    return this.adminService.convertToPublic(id);
   }
 }

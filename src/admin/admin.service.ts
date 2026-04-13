@@ -11,6 +11,7 @@ import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
 import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
 import { UpdateCrmNoteDto } from './dto/update-crm-note.dto';
+import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
 
 @Injectable()
 export class AdminService {
@@ -163,10 +164,24 @@ export class AdminService {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado.`);
     }
 
+    // Calcular días restantes si tiene fecha de vencimiento
+    let diasRestantes: number | null = null;
+    if (user.fechaVencimientoAcceso) {
+      const now = new Date();
+      const remainingTime =
+        user.fechaVencimientoAcceso.getTime() - now.getTime();
+      diasRestantes = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+    }
+
     // Quitamos la contraseña
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = user;
-    return result;
+    return {
+      ...result,
+      diasRestantes:
+        diasRestantes !== null ? (diasRestantes < 0 ? 0 : diasRestantes) : null,
+      isExpired: diasRestantes !== null && diasRestantes <= 0,
+    };
   }
 
   // 7. Método de eliminación masiva (Soft Delete)
@@ -555,9 +570,12 @@ export class AdminService {
   }
 
   /**
-   * 13. Listar todas las notas CRM de un usuario (más reciente primero).
+   * 13. Listar las notas CRM de un usuario con paginación y filtros.
    */
-  async getCrmNotes(userId: string) {
+  async getCrmNotes(userId: string, query: GetCrmNotesQueryDto) {
+    const { page = 1, limit = 10, etiqueta } = query;
+    const skip = (page - 1) * limit;
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -572,15 +590,33 @@ export class AdminService {
       throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
     }
 
-    const notes = await this.prisma.crmNote.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-    });
+    const where: Prisma.CrmNoteWhereInput = { userId };
+    if (etiqueta) {
+      where.etiqueta = etiqueta;
+    }
+
+    const [totalItems, notes] = await Promise.all([
+      this.prisma.crmNote.count({ where }),
+      this.prisma.crmNote.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
 
     return {
       usuario: user,
-      totalNotas: notes.length,
-      notes,
+      data: notes,
+      meta: {
+        totalItems,
+        itemCount: notes.length,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
     };
   }
 
@@ -632,28 +668,49 @@ export class AdminService {
   }
 
   /**
-   * 16. Listar TODAS las notas CRM del sistema (Global).
-   * Útil para que el administrador vea la actividad reciente de etiquetas.
+   * 16. Listar TODAS las notas CRM del sistema (Global) con paginación y filtros.
    */
-  async getAllCrmNotes() {
-    const notes = await this.prisma.crmNote.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            nombre: true,
-            apellido: true,
-            tipoUsuario: true,
+  async getAllCrmNotes(query: GetCrmNotesQueryDto) {
+    const { page = 1, limit = 10, etiqueta } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.CrmNoteWhereInput = {};
+    if (etiqueta) {
+      where.etiqueta = etiqueta;
+    }
+
+    const [totalItems, notes] = await Promise.all([
+      this.prisma.crmNote.count({ where }),
+      this.prisma.crmNote.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              nombre: true,
+              apellido: true,
+              tipoUsuario: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
 
     return {
-      total: notes.length,
-      notes,
+      data: notes,
+      meta: {
+        totalItems,
+        itemCount: notes.length,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
     };
   }
 
@@ -739,6 +796,127 @@ export class AdminService {
       message:
         'Usuario convertido a Asesor Privado con 7 días de prueba gratis.',
       user: updatedUser,
+    };
+  }
+
+  /**
+   * 21. Convertir un usuario a Servidor Público con estado ACTIVO.
+   * Restablece al usuario al modo público estándar sin límite de tiempo.
+   */
+  async convertToPublic(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        tipoUsuario: 'SERVIDOR_PUBLICO',
+        estadoCuenta: 'ACTIVO',
+        fechaVencimientoAcceso: null, // Los públicos no tienen vencimiento de prueba de 7 días
+      },
+      select: {
+        id: true,
+        email: true,
+        tipoUsuario: true,
+        estadoCuenta: true,
+        fechaVencimientoAcceso: true,
+      },
+    });
+
+    return {
+      message: 'Usuario convertido a Servidor Público Activo.',
+      user: updatedUser,
+    };
+  }
+
+  /**
+   * 19. REPORTE: Ver estado de pruebas de TODOS los asesores privados.
+   * Muestra cuántos días les quedan a cada uno.
+   */
+  async getPrivateAdvisorsTrialStatus() {
+    const now = new Date();
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        tipoUsuario: 'ASESOR_PRIVADO',
+      },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        apellido: true,
+        estadoCuenta: true,
+        fechaVencimientoAcceso: true,
+      },
+      orderBy: {
+        fechaVencimientoAcceso: 'asc',
+      },
+    });
+
+    const data = users.map((user) => {
+      let diasRestantes: number | null = null;
+      if (user.fechaVencimientoAcceso) {
+        const remainingTime =
+          user.fechaVencimientoAcceso.getTime() - now.getTime();
+        diasRestantes = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+      }
+
+      return {
+        ...user,
+        diasRestantes:
+          diasRestantes !== null
+            ? diasRestantes < 0
+              ? 0
+              : diasRestantes
+            : null,
+        isExpired: diasRestantes !== null && diasRestantes <= 0,
+      };
+    });
+
+    return {
+      total: data.length,
+      data,
+    };
+  }
+
+  /**
+   * 20. Ver estado de prueba de UN usuario específico por su ID.
+   */
+  async getUserTrialStatus(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        tipoUsuario: true,
+        fechaVencimientoAcceso: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
+    }
+
+    const now = new Date();
+    let diasRestantes: number | null = null;
+    if (user.fechaVencimientoAcceso) {
+      const remainingTime =
+        user.fechaVencimientoAcceso.getTime() - now.getTime();
+      diasRestantes = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      tipoUsuario: user.tipoUsuario,
+      fechaVencimientoAcceso: user.fechaVencimientoAcceso,
+      diasRestantes:
+        diasRestantes !== null ? (diasRestantes < 0 ? 0 : diasRestantes) : null,
+      isExpired: diasRestantes !== null && diasRestantes <= 0,
     };
   }
 }

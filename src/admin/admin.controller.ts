@@ -34,6 +34,7 @@ import { DashboardMetricsResponseDto } from './dto/dashboard-metrics-response.dt
 import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
 import { UpdateCrmNoteDto } from './dto/update-crm-note.dto';
 import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
+import { GetChatQueryDto } from './dto/get-chat-query.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -95,14 +96,35 @@ export class AdminController {
   @Get('users/:id/conversations')
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Ver historial de chats de un usuario' })
+  @ApiOperation({
+    summary: 'Ver historial de chats de un usuario (paginado por sesiones)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Conversaciones del usuario recuperadas.',
   })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
-  getUserConversations(@Param('id') id: string) {
-    return this.adminService.getUserConversations(id);
+  getUserConversations(
+    @Param('id') id: string,
+    @Query() query: GetChatQueryDto,
+  ) {
+    return this.adminService.getUserConversations(id, query);
+  }
+
+  @Get('chat-users')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Listar usuarios que han utilizado el chatbot',
+    description:
+      'Devuelve paginada una lista de usuarios que poseen historial en el chatbot, incluyendo total de sesiones/mensajes.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de usuarios obtenida exitosamente.',
+  })
+  getChatbotUsers(@Query() query: GetChatQueryDto) {
+    return this.adminService.getChatbotUsers(query);
   }
 
   // ==================== ROLES ====================

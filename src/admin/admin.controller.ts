@@ -338,4 +338,36 @@ export class AdminController {
   convertToPublic(@Param('id') id: string) {
     return this.adminService.convertToPublic(id);
   }
+
+  @Patch('users/:id/add-subscription')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Añadir 30 días de suscripción a un usuario',
+    description:
+      'Añade 30 días al tiempo restante del usuario (o desde hoy si ya expiró) y cambia su estado a SUSCRITO.',
+  })
+  @ApiResponse({ status: 200, description: 'Suscripción extendida.' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  addSubscriptionTime(@Param('id') id: string) {
+    return this.adminService.addSubscriptionTime(id);
+  }
+
+  @Patch('users/:id/subtract-subscription')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Restar 30 días de suscripción a un usuario',
+    description:
+      'Resta 30 días de la fecha de vencimiento configurada para el usuario (usado para revertir errores).',
+  })
+  @ApiResponse({ status: 200, description: 'Suscripción reducida.' })
+  @ApiResponse({
+    status: 400,
+    description: 'El usuario no tiene fecha de vencimiento.',
+  })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
+  subtractSubscriptionTime(@Param('id') id: string) {
+    return this.adminService.subtractSubscriptionTime(id);
+  }
 }

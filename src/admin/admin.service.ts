@@ -12,6 +12,7 @@ import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
 import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
 import { UpdateCrmNoteDto } from './dto/update-crm-note.dto';
 import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
+import { GetChatQueryDto } from './dto/get-chat-query.dto';
 
 @Injectable()
 export class AdminService {
@@ -309,8 +310,11 @@ export class AdminService {
     };
   }
 
-  // 10. Ver historial de conversaciones de un usuario
-  async getUserConversations(userId: string) {
+  // 10. Ver historial de conversaciones de un usuario (paginado por sesiones)
+  async getUserConversations(userId: string, query: GetChatQueryDto) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -326,26 +330,112 @@ export class AdminService {
       throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
     }
 
-    const messages = await this.prisma.chatHistory.findMany({
+    // 1. Obtener todas las sesiones únicas del usuario (ordenadas por mensaje más reciente)
+    const sessionGroups = await this.prisma.chatHistory.groupBy({
+      by: ['sessionId'],
       where: { userId },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        sessionId: true,
-        userMessage: true,
-        botResponse: true,
-        createdAt: true,
-      },
+      _max: { createdAt: true },
+      orderBy: { _max: { createdAt: 'desc' } },
     });
 
-    // Contar sesiones únicas
-    const uniqueSessions = [...new Set(messages.map((m) => m.sessionId))];
+    const totalSessions = sessionGroups.length;
+    const totalPages = Math.ceil(totalSessions / limit);
 
+    // 2. Extraer los IDs de las sesiones para la página actual
+    const paginatedSessions = sessionGroups.slice(skip, skip + limit);
+    const sessionIds = paginatedSessions.map((s) => s.sessionId);
+
+    // 3. Obtener los mensajes correspondientes a esas sesiones
+    let messages = [];
+    if (sessionIds.length > 0) {
+      messages = await this.prisma.chatHistory.findMany({
+        where: { userId, sessionId: { in: sessionIds } },
+        orderBy: { createdAt: 'asc' }, // ascendente para leer tipo chat normal
+        select: {
+          id: true,
+          sessionId: true,
+          userMessage: true,
+          botResponse: true,
+          createdAt: true,
+        },
+      });
+    }
+
+    // Opcional: Agruparlos por sesión para presentar más estructurado, aunque
+    // retornarlos en bruto le da flexibilidad al front.
     return {
       user,
-      totalMessages: messages.length,
-      totalSessions: uniqueSessions.length,
-      messages,
+      data: messages,
+      meta: {
+        totalItems: totalSessions,
+        itemCount: sessionIds.length,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
+    };
+  }
+
+  // 10.5. Listar todos los usuarios que han usado el chatbot (paginado)
+  async getChatbotUsers(query: GetChatQueryDto) {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    // Obtener la cantidad total de usuarios distintos que tienen historiales
+    const totalUserGroups = await this.prisma.chatHistory.groupBy({
+      by: ['userId'],
+    });
+    const totalItems = totalUserGroups.length;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // Obtener la página actual de IDs de usuario, junto con sus contadores de mensajes y su última interacción
+    const paginatedUserGroups = await this.prisma.chatHistory.groupBy({
+      by: ['userId'],
+      _count: { id: true },
+      _max: { createdAt: true },
+      orderBy: { _max: { createdAt: 'desc' } },
+      skip,
+      take: limit,
+    });
+
+    let resultData = [];
+
+    if (paginatedUserGroups.length > 0) {
+      const userIds = paginatedUserGroups.map((g) => g.userId);
+
+      // Buscar los detalles de cada usuario
+      const usersData = await this.prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: {
+          id: true,
+          nombre: true,
+          apellido: true,
+          email: true,
+          tipoUsuario: true,
+          estadoCuenta: true,
+        },
+      });
+
+      // Combinar los datos del usuario con los acumulados del chat
+      resultData = paginatedUserGroups.map((groupData) => {
+        const userDetail = usersData.find((u) => u.id === groupData.userId);
+        return {
+          user: userDetail || { id: groupData.userId, eliminado: true },
+          totalMensajes: groupData._count.id,
+          ultimoMensajeAt: groupData._max.createdAt,
+        };
+      });
+    }
+
+    return {
+      data: resultData,
+      meta: {
+        totalItems,
+        itemCount: resultData.length,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
     };
   }
 

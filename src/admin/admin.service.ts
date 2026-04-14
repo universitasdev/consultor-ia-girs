@@ -919,4 +919,91 @@ export class AdminService {
       isExpired: diasRestantes !== null && diasRestantes <= 0,
     };
   }
+
+  /**
+   * 22. Añadir 30 días de suscripción a un usuario.
+   * Si ya tiene tiempo futuro restante, lo suma. De lo contrario, cuenta desde hoy.
+   */
+  async addSubscriptionTime(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
+    }
+
+    const now = new Date();
+    let baseDate = now;
+
+    if (user.fechaVencimientoAcceso && user.fechaVencimientoAcceso > now) {
+      baseDate = new Date(user.fechaVencimientoAcceso);
+    }
+
+    const newExpiryDate = new Date(baseDate);
+    newExpiryDate.setDate(newExpiryDate.getDate() + 30);
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        estadoCuenta: 'SUSCRITO',
+        fechaVencimientoAcceso: newExpiryDate,
+        pagoRealizado: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        estadoCuenta: true,
+        fechaVencimientoAcceso: true,
+      },
+    });
+
+    const remainingTime = newExpiryDate.getTime() - now.getTime();
+    const diasRestantes = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+
+    return {
+      message: 'Suscripción extendida por 30 días.',
+      diasRestantes,
+      user: updatedUser,
+    };
+  }
+
+  /**
+   * 23. Restar 30 días de suscripción a un usuario (Para revertir errores).
+   */
+  async subtractSubscriptionTime(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${userId} no encontrado.`);
+    }
+
+    if (!user.fechaVencimientoAcceso) {
+      throw new BadRequestException(
+        'El usuario no tiene una fecha de vencimiento configurada para restar tiempo.',
+      );
+    }
+
+    const newExpiryDate = new Date(user.fechaVencimientoAcceso);
+    newExpiryDate.setDate(newExpiryDate.getDate() - 30);
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        fechaVencimientoAcceso: newExpiryDate,
+      },
+      select: {
+        id: true,
+        email: true,
+        estadoCuenta: true,
+        fechaVencimientoAcceso: true,
+      },
+    });
+
+    const now = new Date();
+    const remainingTime = newExpiryDate.getTime() - now.getTime();
+    const diasRestantes = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+
+    return {
+      message: 'Se restaron 30 días de la suscripción.',
+      diasRestantes: diasRestantes < 0 ? 0 : diasRestantes,
+      user: updatedUser,
+    };
+  }
 }

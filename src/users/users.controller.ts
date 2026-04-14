@@ -80,24 +80,41 @@ export class UsersController {
 
     let alertaVencimiento: { mensaje: string; diasRestantes: number } | null =
       null;
-    if (
-      fechaVencimientoAcceso &&
-      (estadoCuenta === 'PRUEBA_GRATUITA' || estadoCuenta === 'POR_RENOVAR')
-    ) {
+    let diasRestantesGlobal: number | null = null;
+
+    if (fechaVencimientoAcceso) {
       const hoy = new Date();
       const vencimiento = new Date(fechaVencimientoAcceso);
       const diferenciaDias = Math.ceil(
         (vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24),
       );
 
-      if (diferenciaDias <= 2) {
-        alertaVencimiento = {
-          mensaje:
-            diferenciaDias < 0
-              ? 'Tu acceso ha expirado. Por favor, regulariza tu cuenta.'
-              : `Tu comprobación finaliza en ${diferenciaDias} día(s).`,
-          diasRestantes: diferenciaDias,
-        };
+      diasRestantesGlobal = diferenciaDias < 0 ? 0 : diferenciaDias;
+
+      // Alerta Prioritaria (2 días o menos) aplica también a SUSCRITO
+      if (
+        (estadoCuenta === 'PRUEBA_GRATUITA' ||
+          estadoCuenta === 'POR_RENOVAR' ||
+          estadoCuenta === 'SUSCRITO') &&
+        diferenciaDias <= 2
+      ) {
+        if (estadoCuenta === 'SUSCRITO') {
+          alertaVencimiento = {
+            mensaje:
+              diferenciaDias < 0
+                ? 'Tu suscripción ha expirado. Por favor, regulariza tu cuenta.'
+                : `Tu suscripción finaliza en ${diferenciaDias} día(s).`,
+            diasRestantes: diferenciaDias,
+          };
+        } else {
+          alertaVencimiento = {
+            mensaje:
+              diferenciaDias < 0
+                ? 'Tu acceso ha expirado. Por favor, regulariza tu cuenta.'
+                : `Tu comprobación finaliza en ${diferenciaDias} día(s).`,
+            diasRestantes: diferenciaDias,
+          };
+        }
       }
     }
 
@@ -105,6 +122,7 @@ export class UsersController {
       ...userData,
       estadoCuenta,
       fechaVencimientoAcceso,
+      diasRestantes: diasRestantesGlobal,
       alertaVencimiento,
       tipo_usuario: tipoUsuario,
       nombre_ente: profile?.nombreEnte || null,

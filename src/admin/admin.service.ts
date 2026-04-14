@@ -933,7 +933,13 @@ export class AdminService {
     const now = new Date();
     let baseDate = now;
 
-    if (user.fechaVencimientoAcceso && user.fechaVencimientoAcceso > now) {
+    // Si ya es SUSCRITO, sumamos tiempo acumulativo.
+    // Si es cualquier otro estado (ej. PRUEBA_GRATUITA), empezamos de cero desde hoy.
+    if (
+      user.estadoCuenta === 'SUSCRITO' &&
+      user.fechaVencimientoAcceso &&
+      user.fechaVencimientoAcceso > now
+    ) {
       baseDate = new Date(user.fechaVencimientoAcceso);
     }
 

@@ -70,6 +70,7 @@ model User {
   confirmationToken  String?   @unique
   isEmailVerified    Boolean   @default(false)
   isActive           Boolean   @default(true)
+  isVisible          Boolean   @default(true)
   otp                String?
   otpExpiresAt       DateTime?
 

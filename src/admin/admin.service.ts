@@ -68,6 +68,7 @@ export class AdminService {
       role: {
         not: UserRole.ADMIN,
       },
+      isVisible: true, // Solo mostrar usuarios visibles por defecto
     };
 
     // Si se envía isActive, filtrar por estado de cuenta; si no, mostrar todos
@@ -346,7 +347,7 @@ export class AdminService {
     const sessionIds = paginatedSessions.map((s) => s.sessionId);
 
     // 3. Obtener los mensajes correspondientes a esas sesiones
-    let messages = [];
+    let messages: any[] = [];
     if (sessionIds.length > 0) {
       messages = await this.prisma.chatHistory.findMany({
         where: { userId, sessionId: { in: sessionIds } },
@@ -384,6 +385,7 @@ export class AdminService {
     // Obtener la cantidad total de usuarios distintos que tienen historiales
     const totalUserGroups = await this.prisma.chatHistory.groupBy({
       by: ['userId'],
+      where: { user: { isVisible: true } },
     });
     const totalItems = totalUserGroups.length;
     const totalPages = Math.ceil(totalItems / limit);
@@ -391,6 +393,7 @@ export class AdminService {
     // Obtener la página actual de IDs de usuario, junto con sus contadores de mensajes y su última interacción
     const paginatedUserGroups = await this.prisma.chatHistory.groupBy({
       by: ['userId'],
+      where: { user: { isVisible: true } },
       _count: { id: true },
       _max: { createdAt: true },
       orderBy: { _max: { createdAt: 'desc' } },
@@ -398,7 +401,7 @@ export class AdminService {
       take: limit,
     });
 
-    let resultData = [];
+    let resultData: any[] = [];
 
     if (paginatedUserGroups.length > 0) {
       const userIds = paginatedUserGroups.map((g) => g.userId);
@@ -486,21 +489,28 @@ export class AdminService {
       semana5,
       usuariosNoVerificados,
     ] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({ where: { isActive: true } }),
-      this.prisma.user.count({ where: { isActive: false } }),
-      this.prisma.user.count({ where: { isEmailVerified: true } }),
+      this.prisma.user.count({ where: { isVisible: true } }),
+      this.prisma.user.count({ where: { isActive: true, isVisible: true } }),
+      this.prisma.user.count({ where: { isActive: false, isVisible: true } }),
+      this.prisma.user.count({
+        where: { isEmailVerified: true, isVisible: true },
+      }),
       this.prisma.user.count({ where: { role: UserRole.ADMIN } }),
       this.prisma.user.groupBy({
         by: ['role'],
+        where: { isVisible: true },
         _count: { role: true },
       }),
-      this.prisma.chatHistory.count(),
+      this.prisma.chatHistory.count({
+        where: { user: { isVisible: true } },
+      }),
       this.prisma.chatHistory.findMany({
         distinct: ['sessionId'],
+        where: { user: { isVisible: true } },
         select: { sessionId: true },
       }),
       this.prisma.user.findMany({
+        where: { isVisible: true },
         take: 5,
         orderBy: { createdAt: 'desc' },
         select: {
@@ -516,6 +526,7 @@ export class AdminService {
       this.prisma.user.findMany({
         where: {
           estadoCuenta: 'PRUEBA_GRATUITA',
+          isVisible: true,
           fechaVencimientoAcceso: {
             lte: umbral48Horas,
           },
@@ -531,41 +542,78 @@ export class AdminService {
       }),
       this.prisma.user.groupBy({
         by: ['estadoCuenta'],
+        where: { isVisible: true },
         _count: { estadoCuenta: true },
       }),
-      this.prisma.user.count({ where: { tipoUsuario: 'SERVIDOR_PUBLICO' } }),
-      this.prisma.user.count({ where: { tipoUsuario: 'ASESOR_PRIVADO' } }),
       this.prisma.user.count({
-        where: { estadoCuenta: 'SUSCRITO', isActive: true },
+        where: { tipoUsuario: 'SERVIDOR_PUBLICO', isVisible: true },
       }),
       this.prisma.user.count({
-        where: { estadoCuenta: 'SUSPENDIDO', updatedAt: { gte: last30Days } },
+        where: { tipoUsuario: 'ASESOR_PRIVADO', isVisible: true },
+      }),
+      this.prisma.user.count({
+        where: { estadoCuenta: 'SUSCRITO', isActive: true, isVisible: true },
+      }),
+      this.prisma.user.count({
+        where: {
+          estadoCuenta: 'SUSPENDIDO',
+          isVisible: true,
+          updatedAt: { gte: last30Days },
+        },
       }),
       // Comparativa
-      this.prisma.user.count({ where: { createdAt: { gte: startOfToday } } }),
-      this.prisma.user.count({ where: { createdAt: { gte: last7Days } } }),
       this.prisma.user.count({
-        where: { createdAt: { gte: prev7Days, lt: last7Days } },
+        where: { createdAt: { gte: startOfToday }, isVisible: true },
       }),
-      this.prisma.user.count({ where: { createdAt: { gte: last30Days } } }),
       this.prisma.user.count({
-        where: { createdAt: { gte: prev30Days, lt: last30Days } },
+        where: { createdAt: { gte: last7Days }, isVisible: true },
+      }),
+      this.prisma.user.count({
+        where: {
+          createdAt: { gte: prev7Days, lt: last7Days },
+          isVisible: true,
+        },
+      }),
+      this.prisma.user.count({
+        where: { createdAt: { gte: last30Days }, isVisible: true },
+      }),
+      this.prisma.user.count({
+        where: {
+          createdAt: { gte: prev30Days, lt: last30Days },
+          isVisible: true,
+        },
       }),
       // Semanas para gráfico
-      this.prisma.user.count({ where: { createdAt: { gte: last7Days } } }),
       this.prisma.user.count({
-        where: { createdAt: { gte: prev7Days, lt: last7Days } },
+        where: { createdAt: { gte: last7Days }, isVisible: true },
       }),
       this.prisma.user.count({
-        where: { createdAt: { gte: prev14Days, lt: prev7Days } },
+        where: {
+          createdAt: { gte: prev7Days, lt: last7Days },
+          isVisible: true,
+        },
       }),
       this.prisma.user.count({
-        where: { createdAt: { gte: prev21Days, lt: prev14Days } },
+        where: {
+          createdAt: { gte: prev14Days, lt: prev7Days },
+          isVisible: true,
+        },
       }),
       this.prisma.user.count({
-        where: { createdAt: { gte: prev28Days, lt: prev21Days } },
+        where: {
+          createdAt: { gte: prev21Days, lt: prev14Days },
+          isVisible: true,
+        },
       }),
-      this.prisma.user.count({ where: { isEmailVerified: false } }),
+      this.prisma.user.count({
+        where: {
+          createdAt: { gte: prev28Days, lt: prev21Days },
+          isVisible: true,
+        },
+      }),
+      this.prisma.user.count({
+        where: { isEmailVerified: false, isVisible: true },
+      }),
     ]);
 
     return {

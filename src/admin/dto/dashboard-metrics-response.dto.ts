@@ -52,6 +52,9 @@ class AnalyticsDto {
   @ApiProperty({ example: 8 })
   suspensionesRecientes: number;
 
+  @ApiProperty({ example: 10 })
+  usuariosNoVerificados: number;
+
   @ApiProperty({ example: 12 })
   crecimientoHoy: number;
 

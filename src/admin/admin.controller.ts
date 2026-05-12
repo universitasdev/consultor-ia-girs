@@ -35,6 +35,8 @@ import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
 import { UpdateCrmNoteDto } from './dto/update-crm-note.dto';
 import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
 import { GetChatQueryDto } from './dto/get-chat-query.dto';
+import { GetAbandonedRegistrationsQueryDto } from './dto/get-abandoned-registrations-query.dto';
+import { CreateAbandonedNoteDto } from './dto/create-abandoned-note.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -391,5 +393,82 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
   subtractSubscriptionTime(@Param('id') id: string) {
     return this.adminService.subtractSubscriptionTime(id);
+  }
+
+  // ==================== REGISTROS ABANDONADOS ====================
+
+  @Get('abandoned-registrations')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Listar registros abandonados con paginación y búsqueda',
+    description:
+      'Retorna los usuarios que no confirmaron su cuenta en 10 minutos y fueron movidos a esta tabla.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de registros abandonados recuperada.',
+  })
+  findAllAbandonedRegistrations(
+    @Query() query: GetAbandonedRegistrationsQueryDto,
+  ) {
+    return this.adminService.findAllAbandonedRegistrations(query);
+  }
+
+  @Get('abandoned-registrations/:id')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Ver detalle de un registro abandonado y sus notas',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Detalles del registro recuperados.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Registro abandonado no encontrado.',
+  })
+  findOneAbandonedRegistration(@Param('id') id: string) {
+    return this.adminService.findOneAbandonedRegistration(id);
+  }
+
+  @Post('abandoned-registrations/:id/notes')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Agregar nota de seguimiento a un registro abandonado',
+  })
+  @ApiResponse({ status: 201, description: 'Nota creada exitosamente.' })
+  @ApiResponse({
+    status: 404,
+    description: 'Registro abandonado no encontrado.',
+  })
+  createAbandonedNote(
+    @Param('id') registrationId: string,
+    @Body() dto: CreateAbandonedNoteDto,
+    @GetUser() admin: { id: string; nombre: string },
+  ) {
+    return this.adminService.createAbandonedNote(
+      admin.id,
+      admin.nombre,
+      registrationId,
+      dto,
+    );
+  }
+
+  @Delete('abandoned-registrations/:id')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Eliminar manualmente un registro abandonado',
+  })
+  @ApiResponse({ status: 200, description: 'Registro eliminado.' })
+  @ApiResponse({
+    status: 404,
+    description: 'Registro abandonado no encontrado.',
+  })
+  deleteAbandonedRegistration(@Param('id') id: string) {
+    return this.adminService.deleteAbandonedRegistration(id);
   }
 }

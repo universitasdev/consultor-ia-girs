@@ -13,6 +13,8 @@ import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
 import { UpdateCrmNoteDto } from './dto/update-crm-note.dto';
 import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
 import { GetChatQueryDto } from './dto/get-chat-query.dto';
+import { GetAbandonedRegistrationsQueryDto } from './dto/get-abandoned-registrations-query.dto';
+import { CreateAbandonedNoteDto } from './dto/create-abandoned-note.dto';
 
 @Injectable()
 export class AdminService {
@@ -1149,5 +1151,136 @@ export class AdminService {
       diasRestantes: diasRestantes < 0 ? 0 : diasRestantes,
       user: updatedUser,
     };
+  }
+
+  // ==================== REGISTROS ABANDONADOS ====================
+
+  /**
+   * 24. Listar registros abandonados con paginación y filtros.
+   */
+  async findAllAbandonedRegistrations(
+    query: GetAbandonedRegistrationsQueryDto,
+  ) {
+    const { page = 1, limit = 10, search, tipoUsuario } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.AbandonedRegistrationWhereInput = {};
+
+    if (tipoUsuario) {
+      where.tipoUsuario = tipoUsuario as TipoUsuario;
+    }
+
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { nombre: { contains: search, mode: 'insensitive' } },
+        { apellido: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [totalItems, registrations] = await Promise.all([
+      this.prisma.abandonedRegistration.count({ where }),
+      this.prisma.abandonedRegistration.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { deletedAt: 'desc' },
+        include: {
+          _count: {
+            select: { notes: true },
+          },
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+
+    return {
+      data: registrations,
+      meta: {
+        totalItems,
+        itemCount: registrations.length,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: page,
+      },
+    };
+  }
+
+  /**
+   * 25. Ver detalle de un registro abandonado con sus notas.
+   */
+  async findOneAbandonedRegistration(id: string) {
+    const registration = await this.prisma.abandonedRegistration.findUnique({
+      where: { id },
+      include: {
+        notes: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!registration) {
+      throw new NotFoundException(
+        `Registro abandonado con ID ${id} no encontrado.`,
+      );
+    }
+
+    return registration;
+  }
+
+  /**
+   * 26. Crear una nota para un registro abandonado.
+   */
+  async createAbandonedNote(
+    adminId: string,
+    adminNombre: string,
+    registrationId: string,
+    dto: CreateAbandonedNoteDto,
+  ) {
+    const registration = await this.prisma.abandonedRegistration.findUnique({
+      where: { id: registrationId },
+    });
+
+    if (!registration) {
+      throw new NotFoundException(
+        `Registro abandonado con ID ${registrationId} no encontrado.`,
+      );
+    }
+
+    const note = await this.prisma.abandonedRegistrationNote.create({
+      data: {
+        content: dto.content,
+        adminId,
+        adminNombre,
+        registrationId,
+      },
+    });
+
+    return {
+      message: 'Nota de seguimiento creada exitosamente.',
+      note,
+    };
+  }
+
+  /**
+   * 27. Eliminar un registro abandonado (Limpieza manual).
+   */
+  async deleteAbandonedRegistration(id: string) {
+    const registration = await this.prisma.abandonedRegistration.findUnique({
+      where: { id },
+    });
+
+    if (!registration) {
+      throw new NotFoundException(
+        `Registro abandonado con ID ${id} no encontrado.`,
+      );
+    }
+
+    await this.prisma.abandonedRegistration.delete({
+      where: { id },
+    });
+
+    return { message: 'Registro abandonado eliminado exitosamente.' };
   }
 }

@@ -139,4 +139,34 @@ model CrmNote {
   // Relación con el usuario cliente al que pertenece la nota
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @map("user_id")
-}
+}
+
+model AbandonedRegistration {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  nombre       String
+  apellido     String?
+  telefono     String?
+  tipoUsuario  TipoUsuario? @map("tipo_usuario")
+  registeredAt DateTime     @map("registered_at") 
+  deletedAt    DateTime     @default(now()) @map("deleted_at")
+
+  // Relación con las notas
+  notes        AbandonedRegistrationNote[]
+
+  @@map("abandoned_registrations")
+}
+
+model AbandonedRegistrationNote {
+  id                    String                @id @default(uuid())
+  content               String                @db.Text
+  adminId               String                @map("admin_id")     // ID del admin
+  adminNombre           String                @map("admin_nombre") // Nombre del admin
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt           @map("updated_at")
+
+  abandonedRegistration AbandonedRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  registrationId        String                @map("registration_id")
+
+  @@map("abandoned_registration_notes")
+}

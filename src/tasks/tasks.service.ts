@@ -26,43 +26,60 @@ export class TasksService {
       'Ejecutando tarea programada: Limpieza de usuarios no verificados...',
     );
 
-    // 1. Calcula la fecha límite (usuarios creados hace más de 7 días)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    // 1. Calcula la fecha límite (usuarios creados hace más de 10 minutos)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
 
     // 2. Busca los usuarios que cumplen las condiciones
     const usersToDelete = await this.prisma.user.findMany({
       where: {
         isEmailVerified: false, // No han verificado su correo
         createdAt: {
-          lt: sevenDaysAgo, // Fueron creados antes de hace 7 días
+          lt: tenMinutesAgo, // Fueron creados antes de hace 10 minutos
         },
       },
       select: {
-        id: true, // Solo necesitamos el ID para borrarlos
+        id: true,
         email: true,
+        nombre: true,
+        apellido: true,
+        telefono: true,
+        tipoUsuario: true,
+        createdAt: true,
       },
     });
 
     if (usersToDelete.length === 0) {
-      // this.logger.log('No se encontraron usuarios no verificados para eliminar.');
       return;
     }
 
     this.logger.warn(
-      `Se encontraron ${usersToDelete.length} usuarios no verificados para eliminar.`,
+      `Se encontraron ${usersToDelete.length} usuarios no verificados. Resguardando datos y eliminando...`,
     );
 
-    // 3. Elimina los usuarios encontrados
+    // 3. Respaldar en AbandonedRegistration
+    await this.prisma.abandonedRegistration.createMany({
+      data: usersToDelete.map((user) => ({
+        email: user.email,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        telefono: user.telefono,
+        tipoUsuario: user.tipoUsuario,
+        registeredAt: user.createdAt,
+      })),
+      skipDuplicates: true,
+    });
+
+    // 4. Elimina los usuarios encontrados
     const deleteResult = await this.prisma.user.deleteMany({
       where: {
         id: {
-          in: usersToDelete.map((user) => user.id), // Elimina por la lista de IDs
+          in: usersToDelete.map((user) => user.id),
         },
       },
     });
 
     this.logger.log(
-      `Se eliminaron ${deleteResult.count} usuarios no verificados.`,
+      `Se eliminaron ${deleteResult.count} usuarios no verificados y se movieron a registros abandonados.`,
     );
   }
 

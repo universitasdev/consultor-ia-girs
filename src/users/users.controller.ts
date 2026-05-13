@@ -40,18 +40,40 @@ export class UsersController {
   @ApiResponse({
     status: HttpStatus.OK,
     description:
-      'Devuelve el email, nombre completo y rol del usuario autenticado.',
+      'Devuelve el email, nombre completo, rol y el estado de noticias/políticas sin leer.',
+    schema: {
+      example: {
+        nombreCompleto: 'Juan Pérez',
+        email: 'juan@example.com',
+        role: 'USER',
+        hasUnreadNews: true,
+        latestNews: {
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          title: 'Nuevas Políticas de Privacidad',
+          content: 'Estimado usuario...',
+          createdAt: '2024-05-13T10:00:00.000Z',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'No autorizado.',
   })
-  getMyProfile(@GetUser() user: User) {
+  async getMyProfile(@GetUser() user: User) {
     // El decorador @GetUser inyecta el usuario validado desde el token
+
+    // Buscar si hay noticias sin leer (usando el campo del User model)
+    const newsStatus = await this.usersService.getLatestUnreadNews(
+      user.lastReadNewsAt,
+    );
+
     return {
       nombreCompleto: `${user.nombre} ${user.apellido || ''}`.trim(),
       email: user.email,
       role: user.role, // Es útil devolver el rol
+      hasUnreadNews: newsStatus.hasUnreadNews,
+      latestNews: newsStatus.latestNews,
     };
   }
   @Get('profile')
@@ -156,6 +178,25 @@ export class UsersController {
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.usersService.changePassword(user.id, changePasswordDto);
+  }
+
+  @Post('accept-news')
+  @ApiOperation({ summary: 'Marcar las noticias como leídas / aceptadas' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Noticias marcadas como leídas exitosamente.',
+    schema: {
+      example: {
+        message: 'Noticias marcadas como leídas exitosamente.',
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'No autorizado.',
+  })
+  acceptNews(@GetUser() user: User) {
+    return this.usersService.acceptNews(user.id);
   }
 
   @Delete('me')

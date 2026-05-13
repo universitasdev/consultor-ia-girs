@@ -15,6 +15,7 @@ import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
 import { GetChatQueryDto } from './dto/get-chat-query.dto';
 import { GetAbandonedRegistrationsQueryDto } from './dto/get-abandoned-registrations-query.dto';
 import { CreateAbandonedNoteDto } from './dto/create-abandoned-note.dto';
+import { CreateNewsDto } from './dto/create-news.dto';
 
 @Injectable()
 export class AdminService {
@@ -1282,5 +1283,22 @@ export class AdminService {
     });
 
     return { message: 'Registro abandonado eliminado exitosamente.' };
+  }
+
+  /**
+   * 28. Crear una nueva noticia o actualización de políticas.
+   */
+  async createNews(dto: CreateNewsDto) {
+    const news = await this.prisma.news.create({
+      data: {
+        title: dto.title,
+        content: dto.content,
+      },
+    });
+
+    return {
+      message: 'Noticia creada exitosamente. Los usuarios serán notificados.',
+      news,
+    };
   }
 }

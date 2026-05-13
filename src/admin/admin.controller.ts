@@ -37,6 +37,7 @@ import { GetCrmNotesQueryDto } from './dto/get-crm-notes-query.dto';
 import { GetChatQueryDto } from './dto/get-chat-query.dto';
 import { GetAbandonedRegistrationsQueryDto } from './dto/get-abandoned-registrations-query.dto';
 import { CreateAbandonedNoteDto } from './dto/create-abandoned-note.dto';
+import { CreateNewsDto } from './dto/create-news.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -470,5 +471,35 @@ export class AdminController {
   })
   deleteAbandonedRegistration(@Param('id') id: string) {
     return this.adminService.deleteAbandonedRegistration(id);
+  }
+
+  // ==================== NOTICIAS Y POLÍTICAS ====================
+
+  @Post('news')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Publicar una nueva noticia o actualización de políticas',
+    description:
+      'Crea una alerta global que los usuarios verán y deberán aceptar en su próxima sesión.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Noticia publicada exitosamente.',
+    schema: {
+      example: {
+        message: 'Noticia creada exitosamente. Los usuarios serán notificados.',
+        news: {
+          id: '123e4567-e89b-12d3-a456-426614174000',
+          title: 'Actualización de Políticas de Privacidad',
+          content:
+            'Estimado usuario, hemos actualizado nuestras políticas de uso de datos...',
+          createdAt: '2024-05-13T10:00:00.000Z',
+        },
+      },
+    },
+  })
+  createNews(@Body() dto: CreateNewsDto) {
+    return this.adminService.createNews(dto);
   }
 }

@@ -180,4 +180,33 @@ export class UsersService {
         'El usuario ha sido desactivado exitosamente (Eliminación Pasiva).',
     };
   }
+
+  async getLatestUnreadNews(userLastReadAt: Date | null) {
+    // Buscar la noticia más reciente
+    const latestNews = await this.prisma.news.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!latestNews) {
+      return { hasUnreadNews: false, latestNews: null };
+    }
+
+    // Si el usuario no tiene lastReadNewsAt (no debería pasar por el default(now()), pero por si acaso),
+    // o si la noticia fue creada DESPUÉS de la última lectura del usuario
+    const hasUnreadNews =
+      !userLastReadAt || latestNews.createdAt > userLastReadAt;
+
+    return {
+      hasUnreadNews,
+      latestNews: hasUnreadNews ? latestNews : null,
+    };
+  }
+
+  async acceptNews(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { lastReadNewsAt: new Date() },
+    });
+    return { message: 'Noticias marcadas como leídas exitosamente.' };
+  }
 }

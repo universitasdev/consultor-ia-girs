@@ -19,18 +19,22 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 
-// --- 👇 AÑADE ESTAS TRES LÍNEAS DE IMPORTACIÓN ---
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto'; // Importar el nuevo DTO
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request } from 'express';
-interface RequestWithAccessTokenPayload extends Request {
+import { UserRole } from '@prisma/client';
+
+interface RequestWithUser extends Request {
   user: {
     id: string;
-    // ...otros campos...
+    email: string;
+    role: UserRole;
+    nombre?: string;
+    apellido?: string;
   };
 }
 
@@ -54,10 +58,10 @@ export class AuthController {
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Iniciar sesión' })
+  @ApiOperation({ summary: 'Iniciar sesión (todos los tipos de usuario)' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Login exitoso, devuelve un token de acceso.',
+    description: 'Login exitoso, devuelve tokens de acceso y refresh.',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -116,8 +120,27 @@ export class AuthController {
     return await this.authService.refreshTokens(refreshTokenDto.refreshToken);
   }
 
-  // --- 👇👇👇 AÑADE ESTE MÉTODO PARA LOGOUT 👇👇👇 ---
-  @UseGuards(JwtAuthGuard) // Protegido por el access token
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener datos del usuario autenticado actual' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Datos del usuario recuperados.',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'No autorizado.',
+  })
+  getMe(@Req() req: RequestWithUser) {
+    return {
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post('logout')
   @ApiOperation({ summary: 'Cerrar sesión (invalidar refresh token)' })
@@ -126,9 +149,8 @@ export class AuthController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'No autorizado.',
   })
-  async logout(@Req() req: RequestWithAccessTokenPayload) {
-    // Usa la interfaz correcta
+  async logout(@Req() req: RequestWithUser) {
     const userId = req.user.id;
-    return this.authService.logout(userId); // Llama al servicio
+    return this.authService.logout(userId);
   }
 }

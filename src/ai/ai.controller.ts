@@ -105,7 +105,7 @@ export class AiController {
 
   @Get('admin/users')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @ApiOperation({
     summary: 'Listar todos los usuarios que han usado el chatbot (Solo Admin)',
   })
@@ -146,7 +146,7 @@ export class AiController {
 
   @Get('admin/users/:userId/conversations')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @ApiOperation({
     summary:
       'Ver todas las conversaciones de un usuario específico (Solo Admin)',

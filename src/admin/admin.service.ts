@@ -69,7 +69,7 @@ export class AdminService {
     // Construir el filtro dinámicamente
     const where: Prisma.UserWhereInput = {
       role: {
-        not: UserRole.ADMIN,
+        notIn: [UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR],
       },
       isVisible: true, // Solo mostrar usuarios visibles por defecto
     };
@@ -285,7 +285,10 @@ export class AdminService {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado.`);
     }
 
-    if (user.role === UserRole.ADMIN) {
+    if (
+      user.role === UserRole.ADMIN ||
+      user.role === UserRole.ADMIN_VISUALIZADOR
+    ) {
       throw new ForbiddenException('No puedes eliminar a otro administrador.');
     }
 
@@ -498,7 +501,9 @@ export class AdminService {
       this.prisma.user.count({
         where: { isEmailVerified: true, isVisible: true },
       }),
-      this.prisma.user.count({ where: { role: UserRole.ADMIN } }),
+      this.prisma.user.count({
+        where: { role: { in: [UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR] } },
+      }),
       this.prisma.user.groupBy({
         by: ['role'],
         where: { isVisible: true },

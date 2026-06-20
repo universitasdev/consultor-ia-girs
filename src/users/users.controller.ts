@@ -240,7 +240,7 @@ export class UsersController {
 
   @Delete('admin/:id')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @ApiOperation({
     summary: 'Eliminar usuario por ID (Admin, Eliminación Pasiva)',
   })

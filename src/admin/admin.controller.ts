@@ -49,7 +49,7 @@ export class AdminController {
   // ==================== GESTIÓN DE USUARIOS ====================
 
   @Get('users')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Listar usuarios con paginación y búsqueda por email',
@@ -60,7 +60,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/toggle-active')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Activar/desactivar un usuario' })
   @ApiResponse({ status: 200, description: 'Estado del usuario cambiado.' })
@@ -70,7 +70,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/estado-cuenta')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Actualizar manualmente el estado de la cuenta' })
   @ApiResponse({ status: 200, description: 'Estado actualizado.' })
@@ -83,7 +83,7 @@ export class AdminController {
   }
 
   @Delete('users/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
@@ -97,7 +97,7 @@ export class AdminController {
   }
 
   @Get('users/:id/conversations')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Ver historial de chats de un usuario (paginado por sesiones)',
@@ -115,7 +115,7 @@ export class AdminController {
   }
 
   @Get('chat-users')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Listar usuarios que han utilizado el chatbot',
@@ -133,7 +133,7 @@ export class AdminController {
   // ==================== ROLES ====================
 
   @Patch('users/role')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Actualizar el rol de un usuario (Solo Admin)' })
   @ApiResponse({ status: 200, description: 'Rol actualizado.' })
@@ -145,7 +145,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/upgrade-to-pro')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Ascender un usuario a PRO (Gratis -> Pro)' })
   @ApiResponse({
@@ -160,7 +160,7 @@ export class AdminController {
   // ==================== MÉTRICAS ====================
 
   @Get('metrics/dashboard')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Métricas consolidadas de usuarios y chats (Dashboard)',
@@ -177,7 +177,7 @@ export class AdminController {
   // ==================== ELIMINACIÓN MASIVA ====================
 
   @Post('users/bulk-delete')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Eliminar (desactivar) masivamente usuarios por su ID',
@@ -193,7 +193,7 @@ export class AdminController {
   // ==================== DETALLE ====================
 
   @Get('users/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
@@ -211,7 +211,7 @@ export class AdminController {
   // ==================== CRM: NOTAS Y ETIQUETAS ====================
 
   @Post('users/:id/crm-notes')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Crear nota CRM con etiqueta para un usuario',
@@ -231,7 +231,7 @@ export class AdminController {
   }
 
   @Get('users/:id/crm-notes')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Listar notas CRM de un usuario con paginación y filtros',
@@ -251,7 +251,7 @@ export class AdminController {
   }
 
   @Patch('crm-notes/:noteId')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Editar el contenido y/o etiqueta de una nota CRM' })
   @ApiResponse({ status: 200, description: 'Nota CRM actualizada.' })
@@ -264,7 +264,7 @@ export class AdminController {
   }
 
   @Delete('crm-notes/:noteId')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Eliminar una nota CRM' })
   @ApiResponse({ status: 200, description: 'Nota CRM eliminada.' })
@@ -274,7 +274,7 @@ export class AdminController {
   }
 
   @Get('crm-notes/all')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
@@ -291,7 +291,7 @@ export class AdminController {
   }
 
   @Get('users/notifications/expiring-private')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Listar Asesores Privados próximos a vencer (7 días)',
@@ -307,7 +307,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/convert-to-private-trial')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Convertir usuario a Asesor Privado con 7 días de prueba',
@@ -321,7 +321,7 @@ export class AdminController {
   }
 
   @Get('users/notifications/private-trial-status')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reporte: Estado de prueba de TODOS los asesores privados',
@@ -337,7 +337,7 @@ export class AdminController {
   }
 
   @Get('users/:id/trial-status')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Estado de prueba de un usuario específico',
@@ -351,7 +351,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/convert-to-public')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Convertir usuario a Servidor Público Activo',
@@ -365,7 +365,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/add-subscription')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Añadir 30 días de suscripción a un usuario',
@@ -379,7 +379,7 @@ export class AdminController {
   }
 
   @Patch('users/:id/subtract-subscription')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Restar 30 días de suscripción a un usuario',
@@ -399,7 +399,7 @@ export class AdminController {
   // ==================== REGISTROS ABANDONADOS ====================
 
   @Get('abandoned-registrations')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Listar registros abandonados con paginación y búsqueda',
@@ -417,7 +417,7 @@ export class AdminController {
   }
 
   @Get('abandoned-registrations/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Ver detalle de un registro abandonado y sus notas',
@@ -435,7 +435,7 @@ export class AdminController {
   }
 
   @Post('abandoned-registrations/:id/notes')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Agregar nota de seguimiento a un registro abandonado',
@@ -459,7 +459,7 @@ export class AdminController {
   }
 
   @Delete('abandoned-registrations/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Eliminar manualmente un registro abandonado',
@@ -476,7 +476,7 @@ export class AdminController {
   // ==================== NOTICIAS Y POLÍTICAS ====================
 
   @Post('news')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Publicar una nueva noticia o actualización de políticas',

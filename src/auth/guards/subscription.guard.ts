@@ -18,7 +18,7 @@ export class SubscriptionGuard implements CanActivate {
     }
 
     // Permitimos administradores siempre
-    if (user.role === 'ADMIN') {
+    if (user.role === 'ADMIN' || user.role === 'ADMIN_VISUALIZADOR') {
       return true;
     }
 

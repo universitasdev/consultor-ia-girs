@@ -16,6 +16,7 @@ enum UserRole {
   USER      // Usuario gratuito estándar
   PAID_USER // Usuario pago (Pro)
   ADMIN     // Administrador
+  ADMIN_VISUALIZADOR // Administrador visualizador
 }
 
 enum TipoUsuario {

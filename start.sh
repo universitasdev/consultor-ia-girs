@@ -7,7 +7,10 @@ echo "🚀 Iniciando despliegue..."
 echo "🔄 Generando cliente Prisma..."
 npx prisma generate
 
-# 2. Aplicar migraciones pendientes a la base de datos
+# 2. Arreglar migración fallida anterior (si existe) y aplicar pendientes
+echo "🔄 Resolviendo migraciones fallidas previas..."
+npx prisma migrate resolve --rolled-back "20260620155500_add_admin_visualizador_role" || true
+
 echo "🔄 Aplicando migraciones de base de datos..."
 npx prisma migrate deploy
 

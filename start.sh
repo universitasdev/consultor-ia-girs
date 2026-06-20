@@ -3,14 +3,14 @@ set -e
 
 echo "🚀 Iniciando despliegue..."
 
-# 1. Generar cliente y aplicar migraciones
+# 1. Generar cliente Prisma
 echo "🔄 Generando cliente Prisma..."
 npx prisma generate
 
-# (Migraciones omitidas aquí porque Cloud Run tiene un timeout estricto, 
-# se deben lanzar manualmente o en un paso separado de GitHub Actions)
+# 2. Aplicar migraciones pendientes a la base de datos
+echo "🔄 Aplicando migraciones de base de datos..."
+npx prisma migrate deploy
 
-# 2. Iniciar la aplicación
-# pero con el cambio en tsconfig debería estar en dist/main.js
+# 3. Iniciar la aplicación
 echo "🟢 Iniciando servidor NestJS..."
 exec node dist/main.js

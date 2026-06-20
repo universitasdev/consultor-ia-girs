@@ -16,6 +16,9 @@ RUN npm run build
 # --- Etapa 2: Deploy ---
 FROM node:20-alpine
 
+# Puerto por defecto (Cloud Run inyecta PORT automáticamente)
+ENV PORT=3000
+
 # 👇 1. INSTALAMOS CHROMIUM Y SUS DEPENDENCIAS NECESARIAS
 RUN apk add --no-cache \
       chromium \

@@ -9,6 +9,7 @@ node_modules
 # Archivos de build
 dist
 npm-debug.log
+*.tsbuildinfo
 
 # Git
 .git

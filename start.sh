@@ -3,10 +3,17 @@ set -e
 
 echo "🟢 Iniciando el contenedor en Cloud Run..."
 
-# 1. Ejecutar las migraciones pendientes directamente en db_urbanistico
+# Ejecutar las migraciones pendientes
 echo "🚀 Ejecutando migraciones de Prisma en Cloud SQL..."
 npx prisma migrate deploy
 
-# 2. Arrancar la aplicación de NestJS desde la carpeta dist ya compilada
 echo "🔥 Iniciando servidor NestJS..."
-exec node dist/main.js
+
+# Detectar automáticamente la ruta del archivo compilado
+if [ -f "dist/src/main.js" ]; then
+    echo "✅ Archivo detectado en dist/src/"
+    exec node dist/src/main.js
+else
+    echo "✅ Archivo detectado en dist/"
+    exec node dist/main.js
+fi

@@ -22,7 +22,7 @@ COPY . .
 # 7. COMPILAR EL PROYECTO (genera la carpeta dist/ dentro de la imagen)
 RUN rm -rf dist tsconfig.tsbuildinfo tsconfig.build.tsbuildinfo
 RUN npm run build
-RUN test -f dist/main.js || (echo "ERROR: dist/main.js no fue generado" && exit 1)
+RUN test -f dist/main.js || test -f dist/src/main.js || (echo "ERROR: main.js no fue generado" && exit 1)
 
 # 8. Darle permisos de ejecución al script de arranque
 RUN chmod +x ./start.sh

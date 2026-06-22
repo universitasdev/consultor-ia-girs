@@ -1,19 +1,12 @@
 #!/bin/sh
 set -e
 
-echo "🚀 Iniciando despliegue..."
+echo "🟢 Iniciando el contenedor en Cloud Run..."
 
-# 1. Generar cliente Prisma
-echo "🔄 Generando cliente Prisma..."
-npx prisma generate
-
-# 2. Arreglar migración fallida anterior (si existe) y aplicar pendientes
-echo "🔄 Resolviendo migraciones fallidas previas..."
-npx prisma migrate resolve --rolled-back "20260620155500_add_admin_visualizador_role" || true
-
-echo "🔄 Aplicando migraciones de base de datos..."
+# 1. Ejecutar las migraciones pendientes directamente en db_urbanistico
+echo "🚀 Ejecutando migraciones de Prisma en Cloud SQL..."
 npx prisma migrate deploy
 
-# 3. Iniciar la aplicación
-echo "🟢 Iniciando servidor NestJS..."
+# 2. Arrancar la aplicación de NestJS desde la carpeta dist ya compilada
+echo "🔥 Iniciando servidor NestJS..."
 exec node dist/main.js

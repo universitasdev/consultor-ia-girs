@@ -12,6 +12,7 @@ import { AiModule } from './ai/ai.module';
 import { TasksModule } from './tasks/tasks.module';
 import { AdminModule } from './admin/admin.module';
 import { SearchModule } from './search/search.module';
+import { BibliotecaLegalModule } from './biblioteca-legal/biblioteca-legal.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { SearchModule } from './search/search.module';
     TasksModule,
     AdminModule,
     SearchModule,
+    BibliotecaLegalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

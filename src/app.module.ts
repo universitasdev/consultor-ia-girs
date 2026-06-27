@@ -13,6 +13,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { AdminModule } from './admin/admin.module';
 import { SearchModule } from './search/search.module';
 import { BibliotecaLegalModule } from './biblioteca-legal/biblioteca-legal.module';
+import { YoutubeModule } from './youtube/youtube.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { BibliotecaLegalModule } from './biblioteca-legal/biblioteca-legal.modul
     AdminModule,
     SearchModule,
     BibliotecaLegalModule,
+    YoutubeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

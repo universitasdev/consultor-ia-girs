@@ -88,6 +88,9 @@ export class BibliotecaLegalService {
         descripcion: doc.descripcion ?? null,
         gcpFileName: doc.gcpFileName ?? '',
         fechaPublicacion: doc.fechaPublicacion ?? null,
+        numeroGaceta: doc.numeroGaceta ?? null,
+        municipio: doc.municipio ?? null,
+        estado: doc.estado ?? null,
       }));
     } catch (error) {
       if (error instanceof InternalServerErrorException) throw error;

@@ -9,6 +9,8 @@ import {
   Query,
   UseGuards,
   HttpStatus,
+  Delete,
+  HttpCode,
 } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -99,6 +101,38 @@ export class AiController {
     @GetUser() user: User,
   ) {
     return this.aiService.getConversationBySession(sessionId, user.id);
+  }
+
+  @Delete('conversations/:sessionId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Eliminar (borrado pasivo) una conversación del usuario',
+    description:
+      'Oculta la sesión indicada para el usuario autenticado. ' +
+      'Los datos NO se borran de la base de datos — el administrador puede seguir ' +
+      'consultando la conversación desde los endpoints de admin. ' +
+      'El estado se guarda en memoria; se reinicia con cada reinicio del servidor.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Sesión eliminada exitosamente.',
+    schema: {
+      example: {
+        message: 'Conversación eliminada exitosamente.',
+        sessionId: 'uuid-de-la-sesion',
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description:
+      'No existe una conversación con ese sessionId para este usuario, o ya fue eliminada.',
+  })
+  async deleteMyConversation(
+    @Param('sessionId') sessionId: string,
+    @GetUser() user: User,
+  ) {
+    return this.aiService.softDeleteSession(sessionId, user.id);
   }
 
   // --- 👇 ENDPOINTS PARA ADMINISTRADORES ---

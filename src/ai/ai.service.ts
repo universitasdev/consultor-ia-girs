@@ -1,70 +1,83 @@
 // src/ai/ai.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SessionsClient } from '@google-cloud/dialogflow-cx';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AiService {
-  private readonly sessionsClient: SessionsClient;
-  private readonly projectId: string;
-  private readonly location: string;
-  private readonly agentId: string;
+  private readonly logger = new Logger(AiService.name);
+  private readonly gatewayUrl: string;
+
+  /**
+   * Borrado pasivo en memoria.
+   * Clave: userId  →  Valor: Set de sessionIds "eliminadas" por ese usuario.
+   * Los admins consultan directo a la DB sin este filtro, por lo que ven todo.
+   * NOTA: este store se reinicia con cada deploy. Para persistencia permanente
+   * se requiere agregar un campo a la DB (migración pendiente).
+   */
+  private readonly deletedSessionsStore = new Map<string, Set<string>>();
+
+  /** Verifica si una sesión fue eliminada por el usuario */
+  private isSessionDeleted(userId: string, sessionId: string): boolean {
+    return this.deletedSessionsStore.get(userId)?.has(sessionId) ?? false;
+  }
+
+  /** Marca una sesión como eliminada para el usuario */
+  private markSessionDeleted(userId: string, sessionId: string): void {
+    if (!this.deletedSessionsStore.has(userId)) {
+      this.deletedSessionsStore.set(userId, new Set());
+    }
+    this.deletedSessionsStore.get(userId)!.add(sessionId);
+  }
 
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    const projectId = this.configService.get<string>('DIALOGFLOW_PROJECT_ID');
-    const location = this.configService.get<string>('DIALOGFLOW_LOCATION');
-    const agentId = this.configService.get<string>('DIALOGFLOW_AGENT_ID');
+    this.gatewayUrl = this.configService.get<string>('AI_GATEWAY_URL', '');
 
-    if (!projectId || !location || !agentId) {
-      throw new Error(
-        'Faltan variables de entorno necesarias para Dialogflow CX (PROJECT_ID, LOCATION o AGENT_ID).',
+    if (!this.gatewayUrl) {
+      this.logger.warn(
+        'AI_GATEWAY_URL no está configurada en las variables de entorno.',
       );
     }
-
-    this.projectId = projectId;
-    this.location = location;
-    this.agentId = agentId;
-
-    const keyFilename = this.configService.get<string>(
-      'GOOGLE_APPLICATION_CREDENTIALS',
-    );
-    this.sessionsClient = new SessionsClient(
-      keyFilename ? { keyFilename } : undefined,
-    );
   }
 
   async detectIntentText(text: string, sessionId: string): Promise<string> {
-    const sessionPath = this.sessionsClient.projectLocationAgentSessionPath(
-      this.projectId,
-      this.location,
-      this.agentId,
-      sessionId,
-    );
-    const request = {
-      session: sessionPath,
-      queryInput: { text: { text }, languageCode: 'es' },
-    };
+    if (!this.gatewayUrl) {
+      return 'Lo siento, el servicio de inteligencia artificial no está configurado en el servidor.';
+    }
+
     try {
-      const [response] = await this.sessionsClient.detectIntent(request);
-      let botResponse = '';
-      for (const message of response.queryResult?.responseMessages || []) {
-        const textParts = message.text?.text || [];
-        botResponse += textParts.join(' ');
+      const response = await fetch(this.gatewayUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: text,
+          session_id: sessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        this.logger.error(
+          `Error en Gateway AI. Status: ${response.status} ${response.statusText}`,
+        );
+        return 'Lo siento, el servicio de inteligencia artificial no está disponible temporalmente.';
       }
+
+      const data = (await response.json()) as { response?: string };
       return (
-        botResponse ||
+        data.response ||
         'No he podido entender eso. ¿Puedes decirlo de otra forma?'
       );
     } catch (error) {
-      console.error('Error al contactar con Dialogflow CX:', error);
-      return 'Lo siento, estoy teniendo problemas para conectarme. Por favor, inténtalo más tarde.';
+      this.logger.error('Error al contactar con el Gateway AI:', error);
+      return 'Lo siento, estoy teniendo problemas para conectarme al servicio de IA. Por favor, inténtalo más tarde.';
     }
   }
 
@@ -209,8 +222,8 @@ export class AiService {
       throw new Error('Usuario no encontrado');
     }
 
-    // Obtener todos los mensajes
-    const chatHistory = await this.prisma.chatHistory.findMany({
+    // Obtener todos los mensajes y filtrar en memoria las sesiones eliminadas
+    const rawHistory = await this.prisma.chatHistory.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
       select: {
@@ -221,6 +234,11 @@ export class AiService {
         createdAt: true,
       },
     });
+
+    // Filtrar sesiones marcadas como eliminadas por el usuario
+    const chatHistory = rawHistory.filter(
+      (r) => !this.isSessionDeleted(userId, r.sessionId),
+    );
 
     // Convertir a formato plano para renderizado de chat
     const mensajesPlanos: any[] = [];
@@ -292,14 +310,18 @@ export class AiService {
    * @returns Mensajes de la sesión específica
    */
   async getConversationBySession(sessionId: string, userId: string) {
-    const messages = await this.prisma.chatHistory.findMany({
-      where: {
+    // Si el usuario eliminó esta sesión, devolver vacío (el admin usa otro método)
+    if (this.isSessionDeleted(userId, sessionId)) {
+      return {
         sessionId,
-        userId,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
+        mensajes: [],
+        error: 'Esta conversación fue eliminada.',
+      };
+    }
+
+    const messages = await this.prisma.chatHistory.findMany({
+      where: { sessionId, userId },
+      orderBy: { createdAt: 'asc' },
       select: {
         id: true,
         userMessage: true,
@@ -321,6 +343,49 @@ export class AiService {
       userId,
       totalMensajes: messages.length,
       mensajes: messages,
+    };
+  }
+
+  /**
+   * Borrado pasivo de una sesión completa por parte del usuario.
+   * NO modifica la base de datos — usa un Map en memoria por userId.
+   * El administrador conserva visibilidad total (consulta directo a la DB).
+   *
+   * @param sessionId - ID de la sesión a eliminar
+   * @param userId    - ID del usuario autenticado (dueño de la sesión)
+   */
+  async softDeleteSession(
+    sessionId: string,
+    userId: string,
+  ): Promise<{ message: string; sessionId: string }> {
+    // 1. Verificar que existan mensajes de esa sesión pertenecientes al usuario
+    const count = await this.prisma.chatHistory.count({
+      where: { sessionId, userId },
+    });
+
+    if (count === 0) {
+      throw new NotFoundException(
+        `No se encontró ninguna conversación con sessionId "${sessionId}" para este usuario.`,
+      );
+    }
+
+    // 2. Verificar que la sesión no haya sido eliminada ya
+    if (this.isSessionDeleted(userId, sessionId)) {
+      throw new NotFoundException(
+        `La conversación "${sessionId}" ya fue eliminada anteriormente.`,
+      );
+    }
+
+    // 3. Marcar en memoria (sin tocar la DB)
+    this.markSessionDeleted(userId, sessionId);
+
+    this.logger.log(
+      `Borrado pasivo (en memoria): sesión "${sessionId}" del usuario "${userId}" — ${count} registros ocultados.`,
+    );
+
+    return {
+      message: 'Conversación eliminada exitosamente.',
+      sessionId,
     };
   }
 }

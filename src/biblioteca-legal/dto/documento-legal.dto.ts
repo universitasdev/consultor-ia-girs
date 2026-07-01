@@ -6,7 +6,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
  * de la biblioteca legal de urbanismo.
  */
 export class DocumentoLegalDto {
-  @ApiProperty({ description: 'ID único del documento', example: 'uuid-001' })
+  @ApiProperty({
+    description: 'ID único del documento',
+    example: 'uuid-o-id-unico-del-documento',
+  })
   id: string;
 
   @ApiProperty({
@@ -17,7 +20,8 @@ export class DocumentoLegalDto {
 
   @ApiPropertyOptional({
     description: 'Descripción del documento',
-    example: 'Documento que establece los lineamientos principales...',
+    example:
+      'Documento que establece los lineamientos principales para el desarrollo urbanístico de la ciudad.',
     nullable: true,
   })
   descripcion: string | null;
@@ -36,4 +40,26 @@ export class DocumentoLegalDto {
     nullable: true,
   })
   fechaPublicacion: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Número de Gaceta Oficial donde fue publicado el documento',
+    example: 'G.O. 42.123',
+    nullable: true,
+  })
+  numeroGaceta: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Municipio al que pertenece o aplica el documento',
+    example: 'Chacao',
+    nullable: true,
+  })
+  municipio: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Estado (entidad federal) al que pertenece o aplica el documento',
+    example: 'Miranda',
+    nullable: true,
+  })
+  estado: string | null;
 }

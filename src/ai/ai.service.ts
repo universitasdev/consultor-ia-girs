@@ -11,28 +11,6 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
   private readonly gatewayUrl: string;
 
-  /**
-   * Borrado pasivo en memoria.
-   * Clave: userId  →  Valor: Set de sessionIds "eliminadas" por ese usuario.
-   * Los admins consultan directo a la DB sin este filtro, por lo que ven todo.
-   * NOTA: este store se reinicia con cada deploy. Para persistencia permanente
-   * se requiere agregar un campo a la DB (migración pendiente).
-   */
-  private readonly deletedSessionsStore = new Map<string, Set<string>>();
-
-  /** Verifica si una sesión fue eliminada por el usuario */
-  private isSessionDeleted(userId: string, sessionId: string): boolean {
-    return this.deletedSessionsStore.get(userId)?.has(sessionId) ?? false;
-  }
-
-  /** Marca una sesión como eliminada para el usuario */
-  private markSessionDeleted(userId: string, sessionId: string): void {
-    if (!this.deletedSessionsStore.has(userId)) {
-      this.deletedSessionsStore.set(userId, new Set());
-    }
-    this.deletedSessionsStore.get(userId)!.add(sessionId);
-  }
-
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
@@ -232,13 +210,12 @@ export class AiService {
         userMessage: true,
         botResponse: true,
         createdAt: true,
+        deletedByUser: true,
       },
     });
 
-    // Filtrar sesiones marcadas como eliminadas por el usuario
-    const chatHistory = rawHistory.filter(
-      (r) => !this.isSessionDeleted(userId, r.sessionId),
-    );
+    // Filtrar sesiones marcadas como eliminadas (campo en DB)
+    const chatHistory = rawHistory.filter((r) => !r.deletedByUser);
 
     // Convertir a formato plano para renderizado de chat
     const mensajesPlanos: any[] = [];
@@ -310,8 +287,12 @@ export class AiService {
    * @returns Mensajes de la sesión específica
    */
   async getConversationBySession(sessionId: string, userId: string) {
-    // Si el usuario eliminó esta sesión, devolver vacío (el admin usa otro método)
-    if (this.isSessionDeleted(userId, sessionId)) {
+    // Si el usuario eliminó esta sesión, verificar en DB
+    const deletedCheck = await this.prisma.chatHistory.findFirst({
+      where: { sessionId, userId, deletedByUser: true },
+      select: { id: true },
+    });
+    if (deletedCheck) {
       return {
         sessionId,
         mensajes: [],
@@ -370,17 +351,28 @@ export class AiService {
     }
 
     // 2. Verificar que la sesión no haya sido eliminada ya
-    if (this.isSessionDeleted(userId, sessionId)) {
+    const alreadyDeleted = await this.prisma.chatHistory.findFirst({
+      where: { sessionId, userId, deletedByUser: true },
+      select: { id: true },
+    });
+
+    if (alreadyDeleted) {
       throw new NotFoundException(
         `La conversación "${sessionId}" ya fue eliminada anteriormente.`,
       );
     }
 
-    // 3. Marcar en memoria (sin tocar la DB)
-    this.markSessionDeleted(userId, sessionId);
+    // 3. Marcar todos los registros de la sesión como eliminados en la DB
+    const updated = await this.prisma.chatHistory.updateMany({
+      where: { sessionId, userId },
+      data: {
+        deletedByUser: true,
+        deletedAt: new Date(),
+      },
+    });
 
     this.logger.log(
-      `Borrado pasivo (en memoria): sesión "${sessionId}" del usuario "${userId}" — ${count} registros ocultados.`,
+      `Borrado pasivo (DB): sesión "${sessionId}" del usuario "${userId}" — ${updated.count} registros ocultados.`,
     );
 
     return {

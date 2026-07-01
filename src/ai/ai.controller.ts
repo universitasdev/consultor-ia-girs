@@ -108,10 +108,11 @@ export class AiController {
   @ApiOperation({
     summary: 'Eliminar (borrado pasivo) una conversación del usuario',
     description:
-      'Oculta la sesión indicada para el usuario autenticado. ' +
-      'Los datos NO se borran de la base de datos — el administrador puede seguir ' +
+      'Oculta la sesión indicada para el usuario autenticado marcando ' +
+      'los registros con deletedByUser=true en la base de datos. ' +
+      'Los datos NO se borran físicamente — el administrador puede seguir ' +
       'consultando la conversación desde los endpoints de admin. ' +
-      'El estado se guarda en memoria; se reinicia con cada reinicio del servidor.',
+      'El borrado es permanente y persiste entre reinicios del servidor.',
   })
   @ApiResponse({
     status: HttpStatus.OK,

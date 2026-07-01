@@ -37,7 +37,7 @@ export class BibliotecaLegalController {
    * la API externa del otro proyecto (autenticada con x-api-key).
    */
   @Get('documentos')
-  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR, UserRole.USER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Listar documentos de la Biblioteca Legal de Urbanismo',
@@ -67,7 +67,7 @@ export class BibliotecaLegalController {
    * El frontend solo necesita conocer el ID — no necesita saber la ruta del archivo.
    */
   @Get('documentos/preview/:id')
-  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR, UserRole.USER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:

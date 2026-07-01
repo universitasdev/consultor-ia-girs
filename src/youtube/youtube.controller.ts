@@ -36,7 +36,7 @@ export class YoutubeController {
    * Los resultados se cachean en memoria por 1 hora.
    */
   @Get('playlist')
-  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR)
+  @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR, UserRole.USER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Obtener videos de la playlist de YouTube',

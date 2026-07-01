@@ -114,11 +114,15 @@ model UserProfile {
 
 
 model ChatHistory {
-  id          String   @id @default(uuid())
-  sessionId   String   @map("session_id")
-  userMessage String   @db.Text
-  botResponse String   @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
+  id             String    @id @default(uuid())
+  sessionId      String    @map("session_id")
+  userMessage    String    @db.Text
+  botResponse    String    @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Borrado pasivo — el usuario oculta la sesión sin eliminar datos de la DB
+  deletedByUser  Boolean   @default(false) @map("deleted_by_user")
+  deletedAt      DateTime? @map("deleted_at")
 
   // Relación con el usuario
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

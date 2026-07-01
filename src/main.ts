@@ -40,6 +40,7 @@ async function bootstrap() {
       'https://admin.actadeentrega.online',
       'https://ia.girs.universitas.legal',
       'https://admin-girs.netlify.app',
+      'https://iusurbano.netlify.app',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

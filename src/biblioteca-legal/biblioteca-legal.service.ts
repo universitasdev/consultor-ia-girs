@@ -128,6 +128,20 @@ export class BibliotecaLegalService {
           numeroGaceta: doc.numeroGaceta ?? null,
           municipio: doc.municipio ?? null,
           estado: doc.estado ?? null,
+          tituloIntegro: doc.tituloIntegro ?? null,
+          resumen: doc.resumen ?? null,
+          archivoOriginalUrl: doc.archivoOriginalUrl ?? null,
+          estadoLegal: doc.estadoLegal ?? null,
+          tipoNorma: doc.tipoNorma ?? null,
+          enteEmisor: doc.enteEmisor ?? null,
+          pais: doc.pais ?? null,
+          curadorId: doc.curadorId ?? null,
+          curador: (doc.curador as Record<string, unknown>) ?? null,
+          categorias: (doc.categorias as unknown[]) ?? null,
+          etiquetas: (doc.etiquetas as unknown[]) ?? null,
+          notasInternas: (doc.notasInternas as unknown[]) ?? null,
+          metadatos: (doc.metadatos as Record<string, unknown>) ?? null,
+          _count: (doc._count as Record<string, unknown>) ?? null,
         }));
 
         allDocumentos.push(...normalized);

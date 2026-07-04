@@ -62,4 +62,64 @@ export class DocumentoLegalDto {
     nullable: true,
   })
   estado: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Título íntegro del documento',
+    nullable: true,
+  })
+  tituloIntegro?: string | null;
+
+  @ApiPropertyOptional({ description: 'Resumen del documento', nullable: true })
+  resumen?: string | null;
+
+  @ApiPropertyOptional({ description: 'URL original en GCP', nullable: true })
+  archivoOriginalUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Estado legal de la norma',
+    nullable: true,
+  })
+  estadoLegal?: string | null;
+
+  @ApiPropertyOptional({ description: 'Tipo de norma', nullable: true })
+  tipoNorma?: string | null;
+
+  @ApiPropertyOptional({ description: 'Ente emisor', nullable: true })
+  enteEmisor?: string | null;
+
+  @ApiPropertyOptional({ description: 'País', nullable: true })
+  pais?: string | null;
+
+  @ApiPropertyOptional({ description: 'ID del curador', nullable: true })
+  curadorId?: string | null;
+
+  @ApiPropertyOptional({ description: 'Datos del curador', nullable: true })
+  curador?: Record<string, unknown> | null;
+
+  @ApiPropertyOptional({
+    description: 'Categorías del documento',
+    nullable: true,
+    type: [Object],
+  })
+  categorias?: unknown[] | null;
+
+  @ApiPropertyOptional({
+    description: 'Etiquetas',
+    nullable: true,
+    type: [Object],
+  })
+  etiquetas?: unknown[] | null;
+
+  @ApiPropertyOptional({
+    description: 'Notas internas',
+    nullable: true,
+    type: [Object],
+  })
+  notasInternas?: unknown[] | null;
+
+  @ApiPropertyOptional({ description: 'Metadatos adicionales', nullable: true })
+  metadatos?: Record<string, unknown> | null;
+
+  @ApiPropertyOptional({ description: 'Conteos de relaciones', nullable: true })
+  _count?: Record<string, unknown> | null;
 }

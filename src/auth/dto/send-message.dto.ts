@@ -15,7 +15,7 @@ export class SendMessageDto {
     required: false,
     description:
       'ID de la sesión de chat para mantener el contexto de la conversación.',
-    example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
+    example: '3f8e91a2-b4c5-4d6e-8f0a-1c2b3d4e5f6a',
   })
   @IsString()
   @IsUUID()

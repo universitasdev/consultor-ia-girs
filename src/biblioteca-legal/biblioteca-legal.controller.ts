@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -16,7 +17,8 @@ import {
 import { UserRole } from '@prisma/client';
 
 import { BibliotecaLegalService } from './biblioteca-legal.service';
-import { DocumentoLegalDto } from './dto/documento-legal.dto';
+import { GetDocumentosQueryDto } from './dto/get-documentos-query.dto';
+import { DocumentosResponseDto } from './dto/documentos-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -33,8 +35,9 @@ export class BibliotecaLegalController {
   /**
    * GET /biblioteca-legal/documentos
    *
-   * Devuelve la lista completa de documentos de urbanismo consumiendo
-   * la API externa del otro proyecto (autenticada con x-api-key).
+   * Devuelve los documentos de la Biblioteca Legal con soporte de
+   * paginación y filtrado. Los parámetros son opcionales — si no se
+   * envían, retorna la primera página de 20 elementos sin filtros.
    */
   @Get('documentos')
   @Roles(UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR, UserRole.USER)
@@ -42,21 +45,42 @@ export class BibliotecaLegalController {
   @ApiOperation({
     summary: 'Listar documentos de la Biblioteca Legal de Urbanismo',
     description:
-      'Consulta la API externa del sistema de biblioteca legal y devuelve la lista de documentos ' +
-      'de urbanismo con sus títulos, descripciones y rutas de GCP Storage.',
+      'Retorna los documentos de Derecho Urbanístico registrados en la Biblioteca Legal ' +
+      'con soporte de paginación y filtros opcionales.\n\n' +
+      '**Filtros disponibles:**\n' +
+      '- `search`: búsqueda de texto libre en título y descripción.\n' +
+      '- `municipio`: filtrar por municipio (ej: `Chacao`).\n' +
+      '- `estado`: filtrar por entidad federal (ej: `Miranda`).\n\n' +
+      '**Paginación:**\n' +
+      '- `page`: número de página (default `1`).\n' +
+      '- `limit`: elementos por página, máximo 100 (default `20`).\n\n' +
+      'Cada elemento retornado incluye: `id`, `titulo`, `descripcion`, `gcpFileName`, ' +
+      '`fechaPublicacion`, `numeroGaceta`, `municipio` y `estado`.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de documentos obtenida exitosamente.',
-    type: [DocumentoLegalDto],
+    description:
+      'Respuesta paginada con los documentos que coinciden con los filtros.',
+    type: DocumentosResponseDto,
   })
   @ApiResponse({
-    status: 503,
-    description:
-      'No se pudo contactar la API externa (puede estar iniciando si usa Render gratuito).',
+    status: 401,
+    description: 'No autenticado — token JWT ausente o inválido.',
   })
-  getDocumentos(): Promise<DocumentoLegalDto[]> {
-    return this.bibliotecaLegalService.getDocumentos();
+  @ApiResponse({
+    status: 403,
+    description:
+      'Sin permisos — el rol del usuario no tiene acceso a este recurso.',
+  })
+  @ApiResponse({
+    status: 500,
+    description:
+      'Error interno al consultar la fuente de datos de la Biblioteca Legal.',
+  })
+  getDocumentos(
+    @Query() query: GetDocumentosQueryDto,
+  ): Promise<DocumentosResponseDto> {
+    return this.bibliotecaLegalService.getDocumentosFiltrados(query);
   }
 
   /**

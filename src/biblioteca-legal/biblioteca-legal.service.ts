@@ -8,6 +8,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Storage } from '@google-cloud/storage';
 import { DocumentoLegalDto } from './dto/documento-legal.dto';
+import { PaginatedDocumentosDto } from './dto/paginated-documentos.dto';
+import { GetDocumentosQueryDto } from './dto/get-documentos-query.dto';
+import { DocumentosResponseDto } from './dto/documentos-response.dto';
 
 @Injectable()
 export class BibliotecaLegalService {
@@ -40,8 +43,14 @@ export class BibliotecaLegalService {
   }
 
   /**
-   * Llama a la API externa del otro proyecto y devuelve la lista
-   * de documentos de urbanismo.
+   * Llama a la API externa y devuelve la lista completa de documentos.
+   *
+   * Compatible con ambos formatos de respuesta:
+   *  - Legacy (actual): array directo  → [...documentos]
+   *  - Paginado (nuevo): objeto envuelto → { items, total, page, limit, totalPages }
+   *
+   * Cuando la API migre al formato paginado, este método iterará
+   * automáticamente todas las páginas sin necesidad de otro cambio.
    */
   async getDocumentos(): Promise<DocumentoLegalDto[]> {
     if (!this.apiUrl) {
@@ -50,54 +59,94 @@ export class BibliotecaLegalService {
       );
     }
 
-    this.logger.log(`Consultando API externa: ${this.apiUrl}`);
+    const LIMIT = 100;
+    let currentPage = 1;
+    let totalPages = 1;
+    const allDocumentos: DocumentoLegalDto[] = [];
+
+    this.logger.log(`Iniciando carga desde API externa: ${this.apiUrl}`);
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15_000); // 15s timeout (Render puede estar "sleeping")
-
-      const response = await fetch(this.apiUrl, {
-        method: 'GET',
-        headers: {
-          'x-api-key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        this.logger.error(
-          `Error en API externa. Status: ${response.status} ${response.statusText}`,
+      do {
+        const url = `${this.apiUrl}?page=${currentPage}&limit=${LIMIT}`;
+        this.logger.log(
+          `Consultando página ${currentPage}/${totalPages}: ${url}`,
         );
-        throw new InternalServerErrorException(
-          `La API externa respondió con estado ${response.status}. Verifique la URL y la API KEY.`,
-        );
-      }
 
-      const data = (await response.json()) as DocumentoLegalDto[];
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15_000);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'x-api-key': this.apiKey,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          this.logger.error(
+            `Error en API externa. Status: ${response.status} ${response.statusText}`,
+          );
+          throw new InternalServerErrorException(
+            `La API externa respondió con estado ${response.status}. Verifique la URL y la API KEY.`,
+          );
+        }
+
+        const raw = (await response.json()) as unknown;
+
+        let pageItems: DocumentoLegalDto[];
+
+        if (Array.isArray(raw)) {
+          // ── Formato LEGACY: la API devuelve un arreglo directo ──
+          // Se consume en una sola pasada y se sale del bucle.
+          this.logger.log(
+            `Formato legacy detectado — ${raw.length} documentos en respuesta directa.`,
+          );
+          pageItems = raw as DocumentoLegalDto[];
+          totalPages = 1; // forzar salida del do-while
+        } else {
+          // ── Formato PAGINADO: { items, total, page, limit, totalPages } ──
+          const paginated = raw as PaginatedDocumentosDto;
+          totalPages = paginated.totalPages ?? 1;
+          pageItems = paginated.items ?? [];
+          this.logger.log(
+            `Formato paginado detectado — página ${currentPage}/${totalPages}, ${pageItems.length} items.`,
+          );
+        }
+
+        // Normalizar y acumular
+        const normalized: DocumentoLegalDto[] = pageItems.map((doc) => ({
+          id: doc.id ?? '',
+          titulo: doc.titulo ?? null,
+          descripcion: doc.descripcion ?? null,
+          gcpFileName: doc.gcpFileName ?? '',
+          fechaPublicacion: doc.fechaPublicacion ?? null,
+          numeroGaceta: doc.numeroGaceta ?? null,
+          municipio: doc.municipio ?? null,
+          estado: doc.estado ?? null,
+        }));
+
+        allDocumentos.push(...normalized);
+        currentPage++;
+      } while (currentPage <= totalPages);
+
       this.logger.log(
-        `API externa respondió con ${Array.isArray(data) ? data.length : 0} documentos.`,
+        `Carga completa: ${allDocumentos.length} documentos obtenidos.`,
       );
 
-      // Normalizar campos opcionales para garantizar el contrato
-      return data.map((doc) => ({
-        id: doc.id ?? '',
-        titulo: doc.titulo ?? null,
-        descripcion: doc.descripcion ?? null,
-        gcpFileName: doc.gcpFileName ?? '',
-        fechaPublicacion: doc.fechaPublicacion ?? null,
-        numeroGaceta: doc.numeroGaceta ?? null,
-        municipio: doc.municipio ?? null,
-        estado: doc.estado ?? null,
-      }));
+      return allDocumentos;
     } catch (error) {
       if (error instanceof InternalServerErrorException) throw error;
 
       const errName = (error as Error).name;
       if (errName === 'AbortError') {
-        this.logger.error('Timeout al consultar la API externa de urbanismo.');
+        this.logger.error(
+          `Timeout en página ${currentPage} al consultar la API externa de urbanismo.`,
+        );
         throw new InternalServerErrorException(
           'La API externa tardó demasiado en responder. Por favor, intente nuevamente en unos momentos (el servidor puede estar iniciando).',
         );
@@ -108,6 +157,64 @@ export class BibliotecaLegalService {
         'No se pudo obtener la lista de documentos. Intente más tarde.',
       );
     }
+  }
+
+  /**
+   * Devuelve los documentos de urbanismo con filtros opcionales y
+   * paginación controlada por el consumidor.
+   *
+   * Estrategia:
+   *   1. Se obtiene el dataset completo desde la API externa (getDocumentos).
+   *   2. Se aplican los filtros en memoria (search, municipio, estado).
+   *   3. Se pagina el resultado filtrado antes de responder.
+   *
+   * @param query - Parámetros de filtrado y paginación
+   */
+  async getDocumentosFiltrados(
+    query: GetDocumentosQueryDto,
+  ): Promise<DocumentosResponseDto> {
+    const { page = 1, limit = 20, search, municipio, estado } = query;
+
+    // 1. Obtener todos los documentos de la API externa
+    const todos = await this.getDocumentos();
+
+    // 2. Filtrar en memoria
+    const normalSearch = search?.trim().toLowerCase();
+    const normalMunicipio = municipio?.trim().toLowerCase();
+    const normalEstado = estado?.trim().toLowerCase();
+
+    const filtrados = todos.filter((doc) => {
+      if (
+        normalSearch &&
+        !doc.titulo?.toLowerCase().includes(normalSearch) &&
+        !doc.descripcion?.toLowerCase().includes(normalSearch)
+      ) {
+        return false;
+      }
+      if (normalMunicipio && doc.municipio?.toLowerCase() !== normalMunicipio) {
+        return false;
+      }
+      if (normalEstado && doc.estado?.toLowerCase() !== normalEstado) {
+        return false;
+      }
+      return true;
+    });
+
+    // 3. Paginar
+    const total = filtrados.length;
+    const totalPages = Math.ceil(total / limit) || 1;
+    const safePage = Math.min(page, totalPages);
+    const offset = (safePage - 1) * limit;
+    const items = filtrados.slice(offset, offset + limit);
+
+    this.logger.log(
+      `Filtrado: ${total} docs coinciden (page=${safePage}/${totalPages}, limit=${limit})` +
+        (normalSearch ? `, search="${search}"` : '') +
+        (normalMunicipio ? `, municipio="${municipio}"` : '') +
+        (normalEstado ? `, estado="${estado}"` : ''),
+    );
+
+    return { items, total, page: safePage, limit, totalPages };
   }
 
   /**

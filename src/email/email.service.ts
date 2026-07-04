@@ -28,9 +28,9 @@ export class EmailService {
     htmlContent = htmlContent.replace(/{{confirmationUrl}}/g, confirmationLink);
 
     await this.resend.emails.send({
-      from: `Consultor IA GIRS <${this.fromEmail}>`,
+      from: `Universitas <${this.fromEmail}>`,
       to: [to],
-      subject: 'Activa tu cuenta - Consultor IA GIRS',
+      subject: 'Activa tu cuenta - Ius Urbano',
       html: htmlContent,
     });
   }
@@ -47,7 +47,7 @@ export class EmailService {
           Hola,
         </p>
         <p style="color: #333333; font-size: 16px; line-height: 1.5;">
-          Hemos recibido una solicitud para restablecer tu contraseña en la plataforma del <strong>Consultor IA de Gestión Integral de Residuos Sólidos (GIRS)</strong>.
+          Hemos recibido una solicitud para restablecer tu contraseña en Ius Urbano.
         </p>
         <p style="color: #333333; font-size: 16px; line-height: 1.5;">
           Tu código de verificación es:
@@ -73,9 +73,9 @@ export class EmailService {
     `;
 
     await this.resend.emails.send({
-      from: `Consultor IA GIRS <${this.fromEmail}>`,
+      from: `Universitas <${this.fromEmail}>`,
       to: [to],
-      subject: 'Recupera tu contraseña - Consultor IA GIRS',
+      subject: 'Recupera tu contraseña - Ius Urbano',
       html: htmlContent,
     });
   }

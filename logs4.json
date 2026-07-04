@@ -1,0 +1,614 @@
+[
+  {
+    "insertId": "6a49510e0001c10f2df77075",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:34.453896187Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "}",
+    "timestamp": "2026-07-04T18:29:34.114959Z"
+  },
+  {
+    "insertId": "6a49510e0001c10ccd2927ad",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:34.453896187Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "  path: \u001b[32m'/usr/src/app/credenciales/agente-manual-contrataciones-062db4cd5b2f.json'\u001b[39m",
+    "timestamp": "2026-07-04T18:29:34.114956Z"
+  },
+  {
+    "insertId": "6a49510e0001c108cc9b9d11",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:34.453896187Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "  syscall: \u001b[32m'open'\u001b[39m,",
+    "timestamp": "2026-07-04T18:29:34.114952Z"
+  },
+  {
+    "insertId": "6a49510e0001c105d906e8bb",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:34.453896187Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "  code: \u001b[32m'ENOENT'\u001b[39m,",
+    "timestamp": "2026-07-04T18:29:34.114949Z"
+  },
+  {
+    "insertId": "6a49510e0001c101584b8751",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:34.453896187Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "  errno: \u001b[33m-2\u001b[39m,",
+    "timestamp": "2026-07-04T18:29:34.114945Z"
+  },
+  {
+    "insertId": "6a49510e0001c0f6c709c382",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:34.453896187Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[31m[Nest] 1  - \u001b[39m07/04/2026, 6:29:34 PM \u001b[31m  ERROR\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m[Error: ENOENT: no such file or directory, open '/usr/src/app/credenciales/agente-manual-contrataciones-062db4cd5b2f.json'] {",
+    "timestamp": "2026-07-04T18:29:34.114934Z"
+  },
+  {
+    "insertId": "6a49510e0001bfa06595b6d3",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:34.120032091Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[31m[Nest] 1  - \u001b[39m07/04/2026, 6:29:34 PM \u001b[31m  ERROR\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[31mError al generar Signed URL para \"tema-principal/derecho-urbanistico/doctrina/libros/f2d919ad-80ab-4e5e-b711-3bd87ac83ad7.pdf\"\u001b[39m",
+    "timestamp": "2026-07-04T18:29:34.114592Z"
+  },
+  {
+    "insertId": "6a49510e0001bad1ff89c0e9",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-07-04T18:29:34.282390244Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[32m[Nest] 1  - \u001b[39m07/04/2026, 6:29:34 PM \u001b[32m    LOG\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[32mGenerando Signed URL para: \"tema-principal/derecho-urbanistico/doctrina/libros/f2d919ad-80ab-4e5e-b711-3bd87ac83ad7.pdf\" en bucket \"biblioteca-legal\"\u001b[39m",
+    "timestamp": "2026-07-04T18:29:34.113361Z"
+  },
+  {
+    "insertId": "6a49510e0001ba8847cc0653",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-07-04T18:29:34.282390244Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[32m[Nest] 1  - \u001b[39m07/04/2026, 6:29:34 PM \u001b[32m    LOG\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[32mDocumento encontrado: \"La Ciudad Ordenada\" ? gcpFileName: \"tema-principal/derecho-urbanistico/doctrina/libros/f2d919ad-80ab-4e5e-b711-3bd87ac83ad7.pdf\"\u001b[39m",
+    "timestamp": "2026-07-04T18:29:34.113288Z"
+  },
+  {
+    "insertId": "6a49510e0001ba2f58418e2e",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-07-04T18:29:34.282390244Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[32m[Nest] 1  - \u001b[39m07/04/2026, 6:29:34 PM \u001b[32m    LOG\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[32mCarga completa: 20 documentos obtenidos.\u001b[39m",
+    "timestamp": "2026-07-04T18:29:34.113199Z"
+  },
+  {
+    "insertId": "6a49510e0001b9b26ae6371d",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-07-04T18:29:34.282390244Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[32m[Nest] 1  - \u001b[39m07/04/2026, 6:29:34 PM \u001b[32m    LOG\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[32mFormato paginado detectado ? p?gina 1/1, 20 items.\u001b[39m",
+    "timestamp": "2026-07-04T18:29:34.113074Z"
+  },
+  {
+    "insertId": "6a49510d000953459cb8e6a7",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-07-04T18:29:33.950067062Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[32m[Nest] 1  - \u001b[39m07/04/2026, 6:29:33 PM \u001b[32m    LOG\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[32mConsultando p?gina 1/1: https://biblioteca-legal-backend-693924722323.us-central1.run.app/api/v1/biblioteca-legal/urbanismo?page=1&limit=100\u001b[39m",
+    "timestamp": "2026-07-04T18:29:33.611141Z"
+  },
+  {
+    "insertId": "6a49510d000952f45072d622",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-07-04T18:29:33.950067062Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[32m[Nest] 1  - \u001b[39m07/04/2026, 6:29:33 PM \u001b[32m    LOG\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[32mIniciando carga desde API externa: https://biblioteca-legal-backend-693924722323.us-central1.run.app/api/v1/biblioteca-legal/urbanismo\u001b[39m",
+    "timestamp": "2026-07-04T18:29:33.611060Z"
+  },
+  {
+    "insertId": "6a49510d0009528f5ab0eae1",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstdout",
+    "receiveTimestamp": "2026-07-04T18:29:33.617740344Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "\u001b[32m[Nest] 1  - \u001b[39m07/04/2026, 6:29:33 PM \u001b[32m    LOG\u001b[39m \u001b[38;5;3m[BibliotecaLegalService] \u001b[39m\u001b[32mPreview solicitada para documento id=\"176e324a-49a7-467a-9639-932d52b50e2d\"\u001b[39m",
+    "timestamp": "2026-07-04T18:29:33.610959Z"
+  },
+  {
+    "httpRequest": {
+      "latency": "0.518990545s",
+      "protocol": "HTTP/1.1",
+      "remoteIp": "186.188.115.88",
+      "requestMethod": "GET",
+      "requestSize": "709",
+      "requestUrl": "https://consultor-ia-girs-urbanismo-693924722323.us-central1.run.app/biblioteca-legal/documentos/preview/176e324a-49a7-467a-9639-932d52b50e2d",
+      "responseSize": "514",
+      "serverIp": "34.143.79.2",
+      "status": 500,
+      "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; es-VE) WindowsPowerShell/5.1.26100.8655"
+    },
+    "insertId": "6a49510e0001c5db46793cda",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Frequests",
+    "receiveTimestamp": "2026-07-04T18:29:34.121750619Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "spanId": "cf9fc4a1bdbf32b9",
+    "timestamp": "2026-07-04T18:29:33.595648Z",
+    "trace": "projects/agente-manual-contrataciones/traces/935868904349053ec3952a85197a4ac9",
+    "traceSampled": true
+  },
+  {
+    "insertId": "-9pl8mud3wd6",
+    "logName": "projects/agente-manual-contrataciones/logs/cloudaudit.googleapis.com%2Fsystem_event",
+    "protoPayload": {
+      "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+      "methodName": "/Services.ReplaceService",
+      "resourceName": "namespaces/agente-manual-contrataciones/services/consultor-ia-girs-urbanismo",
+      "response": {
+        "@type": "type.googleapis.com/google.cloud.run.v1.Service",
+        "apiVersion": "serving.knative.dev/v1",
+        "kind": "Service",
+        "metadata": {
+          "annotations": {
+            "run.googleapis.com/build-enable-automatic-updates": "false",
+            "run.googleapis.com/build-id": "8849271d-cc52-427b-9891-ce561278d5ce",
+            "run.googleapis.com/build-image-uri": "us-central1-docker.pkg.dev/agente-manual-contrataciones/cloud-run-source-deploy/consultor-ia-girs-urbanismo",
+            "run.googleapis.com/build-name": "projects/693924722323/locations/us-central1/builds/8849271d-cc52-427b-9891-ce561278d5ce",
+            "run.googleapis.com/build-source-location": "gs://run-sources-agente-manual-contrataciones-us-central1/services/consultor-ia-girs-urbanismo/1783189483.23001-ad5dbb919343416a8aa0567faa77599a.zip#1783189485051300",
+            "run.googleapis.com/client-name": "gcloud",
+            "run.googleapis.com/client-version": "573.0.0",
+            "run.googleapis.com/ingress": "all",
+            "run.googleapis.com/ingress-status": "all",
+            "run.googleapis.com/maxScale": "10",
+            "run.googleapis.com/operation-id": "f39a4ba8-69ef-4435-91c1-ee929d6c05aa",
+            "run.googleapis.com/urls": "[\"https://consultor-ia-girs-urbanismo-693924722323.us-central1.run.app\",\"https://consultor-ia-girs-urbanismo-uxpz62qsxq-uc.a.run.app\"]",
+            "serving.knative.dev/creator": "legal.universitas@gmail.com",
+            "serving.knative.dev/lastModifier": "universitasdev@gmail.com"
+          },
+          "creationTimestamp": "2026-06-20T14:16:17.939531Z",
+          "generation": 24,
+          "labels": {
+            "cloud.googleapis.com/location": "us-central1"
+          },
+          "name": "consultor-ia-girs-urbanismo",
+          "namespace": "693924722323",
+          "resourceVersion": "AAZVzTh4a/U",
+          "selfLink": "/apis/serving.knative.dev/v1/namespaces/693924722323/services/consultor-ia-girs-urbanismo",
+          "uid": "5b9e81b7-8a49-4bf5-97fe-5f31ae07d5f2"
+        },
+        "spec": {
+          "template": {
+            "metadata": {
+              "annotations": {
+                "autoscaling.knative.dev/maxScale": "3",
+                "run.googleapis.com/client-name": "gcloud",
+                "run.googleapis.com/client-version": "573.0.0",
+                "run.googleapis.com/cloudsql-instances": "agente-manual-contrataciones:us-central1:cluster-produccion-01",
+                "run.googleapis.com/startup-cpu-boost": "true"
+              },
+              "labels": {
+                "client.knative.dev/nonce": "fprzqfhgce",
+                "run.googleapis.com/startupProbeType": "Default"
+              }
+            },
+            "spec": {
+              "containerConcurrency": 160,
+              "containers": [
+                {
+                  "env": [
+                    {
+                      "name": "BACKEND_URL",
+                      "value": "http://localhost:3000"
+                    },
+                    {
+                      "name": "DATABASE_URL",
+                      "value": "postgresql://postgres:Uu1%2A9537@localhost/db_urbanistico?host=/cloudsql/agente-manual-contrataciones:us-central1:cluster-produccion-01"
+                    },
+                    {
+                      "name": "DIRECT_URL",
+                      "value": "postgresql://postgres:Uu1%2A9537@localhost/db_urbanistico?host=/cloudsql/agente-manual-contrataciones:us-central1:cluster-produccion-01"
+                    },
+                    {
+                      "name": "JWT_SECRET",
+                      "value": "a8b3d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2"
+                    },
+                    {
+                      "name": "FRONTEND_URL",
+                      "value": "https://ia.girs.universitas.legal"
+                    },
+                    {
+                      "name": "RESEND_API_KEY",
+                      "value": "re_RfUFn61d_PcU45Bw6pCA9o8rUF7DR7pHG"
+                    },
+                    {
+                      "name": "FROM_EMAIL",
+                      "value": "app@universitas.legal"
+                    },
+                    {
+                      "name": "GOOGLE_PROJECT_ID",
+                      "value": "agente-manual-contrataciones"
+                    },
+                    {
+                      "name": "DIALOGFLOW_PROJECT_ID",
+                      "value": "agente-manual-contrataciones"
+                    },
+                    {
+                      "name": "DIALOGFLOW_LOCATION",
+                      "value": "global"
+                    },
+                    {
+                      "name": "DIALOGFLOW_AGENT_ID",
+                      "value": "355e8bf4-adc6-47ca-b5b8-1c28378b2b16"
+                    },
+                    {
+                      "name": "URBANISMO_API_URL",
+                      "value": "https://biblioteca-legal-backend-693924722323.us-central1.run.app/api/v1/biblioteca-legal/urbanismo"
+                    },
+                    {
+                      "name": "URBANISMO_API_KEY",
+                      "value": "super-secret-key-para-urbanismo"
+                    },
+                    {
+                      "name": "GCP_STORAGE_BUCKET_NAME",
+                      "value": "biblioteca-legal"
+                    },
+                    {
+                      "name": "YOUTUBE_API_KEY",
+                      "value": "AIzaSyAeRFnxOjI-Lz6cQBnxej_-2kal2NwLIaw"
+                    },
+                    {
+                      "name": "PLAYLIST_ID",
+                      "value": "PLRJBaSLMa1H0_4vzPAmrSDy-02VoGdW8_"
+                    },
+                    {
+                      "name": "AI_GATEWAY_URL",
+                      "value": "https://gateway-529295899189.us-east1.run.app/api/chat"
+                    },
+                    {
+                      "name": "GCP_KEY_FILE_PATH"
+                    }
+                  ],
+                  "image": "us-central1-docker.pkg.dev/agente-manual-contrataciones/cloud-run-source-deploy/consultor-ia-girs-urbanismo@sha256:d3be8c29280caddebfc548015f0a20ba00025cac65e550365f5913f038440837",
+                  "ports": [
+                    {
+                      "containerPort": 3000,
+                      "name": "http1"
+                    }
+                  ],
+                  "resources": {
+                    "limits": {
+                      "cpu": "2",
+                      "memory": "1Gi"
+                    }
+                  },
+                  "startupProbe": {
+                    "failureThreshold": 1,
+                    "periodSeconds": 240,
+                    "tcpSocket": {
+                      "port": 3000
+                    },
+                    "timeoutSeconds": 240
+                  }
+                }
+              ],
+              "serviceAccountName": "693924722323-compute@developer.gserviceaccount.com",
+              "timeoutSeconds": 600
+            }
+          },
+          "traffic": [
+            {
+              "percent": 100,
+              "revisionName": "consultor-ia-girs-urbanismo-00019-wtf"
+            }
+          ]
+        },
+        "status": {
+          "address": {
+            "url": "https://consultor-ia-girs-urbanismo-uxpz62qsxq-uc.a.run.app"
+          },
+          "conditions": [
+            {
+              "lastTransitionTime": "2026-07-04T18:29:24.336629Z",
+              "status": "True",
+              "type": "Ready"
+            },
+            {
+              "lastTransitionTime": "2026-07-04T18:29:24.296775Z",
+              "status": "True",
+              "type": "ConfigurationsReady"
+            },
+            {
+              "lastTransitionTime": "2026-07-04T16:08:33.787276Z",
+              "status": "True",
+              "type": "RoutesReady"
+            }
+          ],
+          "latestCreatedRevisionName": "consultor-ia-girs-urbanismo-00023-gjv",
+          "latestReadyRevisionName": "consultor-ia-girs-urbanismo-00019-wtf",
+          "observedGeneration": 24,
+          "traffic": [
+            {
+              "percent": 100,
+              "revisionName": "consultor-ia-girs-urbanismo-00019-wtf"
+            }
+          ],
+          "url": "https://consultor-ia-girs-urbanismo-uxpz62qsxq-uc.a.run.app"
+        }
+      },
+      "serviceName": "run.googleapis.com",
+      "status": {
+        "message": "Ready condition status changed to True for Service consultor-ia-girs-urbanismo."
+      }
+    },
+    "receiveTimestamp": "2026-07-04T18:29:25.132479204Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "INFO",
+    "timestamp": "2026-07-04T18:29:24.358649Z"
+  },
+  {
+    "insertId": "6a4950f400072ca8b203dc28",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:08.811536272Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "}",
+    "timestamp": "2026-07-04T18:29:08.470184Z"
+  },
+  {
+    "insertId": "6a4950f400072ca5faa6e004",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:08.811536272Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "  path: \u001b[32m'/usr/src/app/credenciales/agente-manual-contrataciones-062db4cd5b2f.json'\u001b[39m",
+    "timestamp": "2026-07-04T18:29:08.470181Z"
+  },
+  {
+    "insertId": "6a4950f400072ca1a692f2be",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:08.811536272Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "  syscall: \u001b[32m'open'\u001b[39m,",
+    "timestamp": "2026-07-04T18:29:08.470177Z"
+  },
+  {
+    "insertId": "6a4950f400072c9e80199bd6",
+    "labels": {
+      "instanceId": "002f8ffd478fb4415b1d8500346386feaa0fa715da4db4fa6b8c6b38af5f1d967ed3235e0f24c198e02bea63a2dc248050f2a9b665778e96f38dd22c802f8ac25e3db6c78917335a9a82a78a69a98f"
+    },
+    "logName": "projects/agente-manual-contrataciones/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-07-04T18:29:08.811536272Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00019-wtf",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "textPayload": "  code: \u001b[32m'ENOENT'\u001b[39m,",
+    "timestamp": "2026-07-04T18:29:08.470174Z"
+  }
+]

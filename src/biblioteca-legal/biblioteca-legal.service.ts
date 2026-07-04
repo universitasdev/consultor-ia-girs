@@ -21,13 +21,19 @@ export class BibliotecaLegalService {
   private readonly apiKey: string;
 
   constructor(private readonly configService: ConfigService) {
-    const keyFilePath = this.configService.get<string>('GCP_KEY_FILE_PATH');
+    let keyFilePath = this.configService.get<string>('GCP_KEY_FILE_PATH');
     this.bucketName = this.configService.get<string>(
       'GCP_STORAGE_BUCKET_NAME',
       'biblioteca-legal',
     );
     this.apiUrl = this.configService.get<string>('URBANISMO_API_URL', '');
     this.apiKey = this.configService.get<string>('URBANISMO_API_KEY', '');
+
+    // Verificar si el archivo realmente existe (en Cloud Run no existirá porque está en .dockerignore)
+    if (keyFilePath && !require('fs').existsSync(keyFilePath)) {
+      this.logger.warn(`El archivo de credenciales ${keyFilePath} no existe. Forzando el uso de Application Default Credentials.`);
+      keyFilePath = undefined;
+    }
 
     // Inicializar GCP Storage — si no hay keyFilePath usa Application Default Credentials
     if (keyFilePath) {
@@ -36,7 +42,7 @@ export class BibliotecaLegalService {
     } else {
       this.storage = new Storage(); // Intentará usar ADC (Application Default Credentials)
       this.logger.warn(
-        'GCP_KEY_FILE_PATH no configurado — usando Application Default Credentials. ' +
+        'GCP_KEY_FILE_PATH no configurado o no existe — usando Application Default Credentials. ' +
           'El endpoint de preview puede fallar si no hay credenciales disponibles.',
       );
     }

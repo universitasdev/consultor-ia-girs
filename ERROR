@@ -1,0 +1,225 @@
+[
+  {
+    "insertId": "kt1t5d3cf2",
+    "logName": "projects/agente-manual-contrataciones/logs/cloudaudit.googleapis.com%2Fsystem_event",
+    "protoPayload": {
+      "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+      "methodName": "/Services.ReplaceService",
+      "resourceName": "namespaces/agente-manual-contrataciones/revisions/consultor-ia-girs-urbanismo-00017-zkn",
+      "response": {
+        "@type": "type.googleapis.com/google.cloud.run.v1.Revision",
+        "apiVersion": "serving.knative.dev/v1",
+        "kind": "Revision",
+        "metadata": {
+          "annotations": {
+            "autoscaling.knative.dev/maxScale": "3",
+            "run.googleapis.com/build-source-location": "{\"consultor-ia-girs-urbanismo-1\":\"gs://run-sources-agente-manual-contrataciones-us-central1/services/consultor-ia-girs-urbanismo/1782954971.173308-3975fe44b74d466fa778a2a80e7b5200.zip#1782954975792541\"}",
+            "run.googleapis.com/client-name": "gcloud",
+            "run.googleapis.com/client-version": "573.0.0",
+            "run.googleapis.com/cloudsql-instances": "agente-manual-contrataciones:us-central1:cluster-produccion-01",
+            "run.googleapis.com/operation-id": "c5d6661e-9184-445a-b4e4-f6aff925fbc3",
+            "run.googleapis.com/startup-cpu-boost": "true",
+            "serving.knative.dev/creator": "universitasdev@gmail.com"
+          },
+          "creationTimestamp": "2026-07-04T16:02:42.464180Z",
+          "generation": 1,
+          "labels": {
+            "client.knative.dev/nonce": "upasobaiit",
+            "cloud.googleapis.com/location": "us-central1",
+            "run.googleapis.com/startupProbeType": "Default",
+            "serving.knative.dev/configuration": "consultor-ia-girs-urbanismo",
+            "serving.knative.dev/configurationGeneration": "17",
+            "serving.knative.dev/route": "consultor-ia-girs-urbanismo",
+            "serving.knative.dev/service": "consultor-ia-girs-urbanismo",
+            "serving.knative.dev/serviceUid": "5b9e81b7-8a49-4bf5-97fe-5f31ae07d5f2"
+          },
+          "name": "consultor-ia-girs-urbanismo-00017-zkn",
+          "namespace": "693924722323",
+          "ownerReferences": [
+            {
+              "apiVersion": "serving.knative.dev/v1",
+              "blockOwnerDeletion": true,
+              "controller": true,
+              "kind": "Configuration",
+              "name": "consultor-ia-girs-urbanismo",
+              "uid": "f2e95983-984c-46bf-a942-53c58c7562af"
+            }
+          ],
+          "resourceVersion": "AAZVyyyt7Rc",
+          "selfLink": "/apis/serving.knative.dev/v1/namespaces/693924722323/revisions/consultor-ia-girs-urbanismo-00017-zkn",
+          "uid": "6f687df4-8175-4ed6-8c86-6a55dcf1382e"
+        },
+        "spec": {
+          "containerConcurrency": 160,
+          "containers": [
+            {
+              "env": [
+                {
+                  "name": "BACKEND_URL",
+                  "value": "http://localhost:3000"
+                },
+                {
+                  "name": "DATABASE_URL",
+                  "value": "postgresql://postgres:Uu1%2A9537@34.135.129.155:5432/db_urbanistico?schema=public"
+                },
+                {
+                  "name": "DIRECT_URL",
+                  "value": "postgresql://postgres:Uu1%2A9537@34.135.129.155:5432/db_urbanistico?schema=public"
+                },
+                {
+                  "name": "JWT_SECRET",
+                  "value": "a8b3d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2"
+                },
+                {
+                  "name": "FRONTEND_URL",
+                  "value": "https://ia.girs.universitas.legal"
+                },
+                {
+                  "name": "RESEND_API_KEY",
+                  "value": "re_RfUFn61d_PcU45Bw6pCA9o8rUF7DR7pHG"
+                },
+                {
+                  "name": "FROM_EMAIL",
+                  "value": "app@universitas.legal"
+                },
+                {
+                  "name": "GOOGLE_PROJECT_ID",
+                  "value": "agente-manual-contrataciones"
+                },
+                {
+                  "name": "DIALOGFLOW_PROJECT_ID",
+                  "value": "agente-manual-contrataciones"
+                },
+                {
+                  "name": "DIALOGFLOW_LOCATION",
+                  "value": "global"
+                },
+                {
+                  "name": "DIALOGFLOW_AGENT_ID",
+                  "value": "355e8bf4-adc6-47ca-b5b8-1c28378b2b16"
+                },
+                {
+                  "name": "URBANISMO_API_URL",
+                  "value": "https://biblioteca-legal-backend-693924722323.us-central1.run.app/api/v1/biblioteca-legal/urbanismo"
+                },
+                {
+                  "name": "URBANISMO_API_KEY",
+                  "value": "super-secret-key-para-urbanismo"
+                },
+                {
+                  "name": "GCP_KEY_FILE_PATH",
+                  "value": "./credenciales/agente-manual-contrataciones-062db4cd5b2f.json"
+                },
+                {
+                  "name": "GCP_STORAGE_BUCKET_NAME",
+                  "value": "biblioteca-legal"
+                },
+                {
+                  "name": "YOUTUBE_API_KEY",
+                  "value": "AIzaSyAeRFnxOjI-Lz6cQBnxej_-2kal2NwLIaw"
+                },
+                {
+                  "name": "PLAYLIST_ID",
+                  "value": "PLRJBaSLMa1H0_4vzPAmrSDy-02VoGdW8_"
+                },
+                {
+                  "name": "AI_GATEWAY_URL",
+                  "value": "https://gateway-529295899189.us-east1.run.app/api/chat"
+                }
+              ],
+              "image": "us-central1-docker.pkg.dev/agente-manual-contrataciones/cloud-run-source-deploy/consultor-ia-girs-urbanismo@sha256:319798956a08e104db514cc2c3f92a14ec71747ccd38e856465aae2dadd795a3",
+              "name": "consultor-ia-girs-urbanismo-1",
+              "ports": [
+                {
+                  "containerPort": 3000,
+                  "name": "http1"
+                }
+              ],
+              "resources": {
+                "limits": {
+                  "cpu": "2",
+                  "memory": "1Gi"
+                }
+              },
+              "startupProbe": {
+                "failureThreshold": 1,
+                "periodSeconds": 240,
+                "tcpSocket": {
+                  "port": 3000
+                },
+                "timeoutSeconds": 240
+              }
+            }
+          ],
+          "serviceAccountName": "693924722323-compute@developer.gserviceaccount.com",
+          "timeoutSeconds": 600
+        },
+        "status": {
+          "conditions": [
+            {
+              "lastTransitionTime": "2026-07-04T16:02:56.581911Z",
+              "message": "The user-provided container failed to start and listen on the port defined provided by the PORT=3000 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.\n\nLogs URL: https://console.cloud.google.com/logs/viewer?project=agente-manual-contrataciones&resource=cloud_run_revision/service_name/consultor-ia-girs-urbanismo/revision_name/consultor-ia-girs-urbanismo-00017-zkn&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22consultor-ia-girs-urbanismo%22%0Aresource.labels.revision_name%3D%22consultor-ia-girs-urbanismo-00017-zkn%22 \nFor more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start",
+              "reason": "HealthCheckContainerError",
+              "status": "False",
+              "type": "Ready"
+            },
+            {
+              "lastTransitionTime": "2026-07-04T16:02:56.581911Z",
+              "message": "The user-provided container failed to start and listen on the port defined provided by the PORT=3000 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.\n\nLogs URL: https://console.cloud.google.com/logs/viewer?project=agente-manual-contrataciones&resource=cloud_run_revision/service_name/consultor-ia-girs-urbanismo/revision_name/consultor-ia-girs-urbanismo-00017-zkn&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22consultor-ia-girs-urbanismo%22%0Aresource.labels.revision_name%3D%22consultor-ia-girs-urbanismo-00017-zkn%22 \nFor more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start",
+              "reason": "HealthCheckContainerError",
+              "status": "False",
+              "type": "ContainerHealthy"
+            },
+            {
+              "lastTransitionTime": "2026-07-04T16:02:43.370323Z",
+              "message": "Container image import completed.",
+              "status": "True",
+              "type": "ContainerReady"
+            },
+            {
+              "lastTransitionTime": "2026-07-04T16:02:44.908Z",
+              "message": "Provisioning imported containers completed in 1.54s. Checking container health. This will wait for up to 4m for the configured startup probe, including an initial delay of 0s.",
+              "status": "True",
+              "type": "ResourcesAvailable"
+            },
+            {
+              "lastTransitionTime": "2026-07-04T16:02:44.908Z",
+              "message": "System will retry after 00:00 from lastTransitionTime for attempt 0.",
+              "reason": "ImmediateRetry",
+              "severity": "Info",
+              "status": "True",
+              "type": "Retry"
+            }
+          ],
+          "containerStatuses": [
+            {
+              "imageDigest": "us-central1-docker.pkg.dev/agente-manual-contrataciones/cloud-run-source-deploy/consultor-ia-girs-urbanismo@sha256:319798956a08e104db514cc2c3f92a14ec71747ccd38e856465aae2dadd795a3",
+              "name": "consultor-ia-girs-urbanismo-1"
+            }
+          ],
+          "imageDigest": "us-central1-docker.pkg.dev/agente-manual-contrataciones/cloud-run-source-deploy/consultor-ia-girs-urbanismo@sha256:319798956a08e104db514cc2c3f92a14ec71747ccd38e856465aae2dadd795a3",
+          "logUrl": "https://console.cloud.google.com/logs/viewer?project=agente-manual-contrataciones&resource=cloud_run_revision/service_name/consultor-ia-girs-urbanismo/revision_name/consultor-ia-girs-urbanismo-00017-zkn&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22consultor-ia-girs-urbanismo%22%0Aresource.labels.revision_name%3D%22consultor-ia-girs-urbanismo-00017-zkn%22",
+          "observedGeneration": 1
+        }
+      },
+      "serviceName": "run.googleapis.com",
+      "status": {
+        "code": 9,
+        "message": "Ready condition status changed to False for Revision consultor-ia-girs-urbanismo-00017-zkn with message: The user-provided container failed to start and listen on the port defined provided by the PORT=3000 environment variable within the allocated timeout. This can happen when the container port is misconfigured or if the timeout is too short. The health check timeout can be extended. Logs for this revision might contain more information.\n\nLogs URL: https://console.cloud.google.com/logs/viewer?project=agente-manual-contrataciones&resource=cloud_run_revision/service_name/consultor-ia-girs-urbanismo/revision_name/consultor-ia-girs-urbanismo-00017-zkn&advancedFilter=resource.type%3D%22cloud_run_revision%22%0Aresource.labels.service_name%3D%22consultor-ia-girs-urbanismo%22%0Aresource.labels.revision_name%3D%22consultor-ia-girs-urbanismo-00017-zkn%22 \nFor more troubleshooting guidance, see https://cloud.google.com/run/docs/troubleshooting#container-failed-to-start"
+      }
+    },
+    "receiveTimestamp": "2026-07-04T16:02:57.094395106Z",
+    "resource": {
+      "labels": {
+        "configuration_name": "consultor-ia-girs-urbanismo",
+        "location": "us-central1",
+        "project_id": "agente-manual-contrataciones",
+        "revision_name": "consultor-ia-girs-urbanismo-00017-zkn",
+        "service_name": "consultor-ia-girs-urbanismo"
+      },
+      "type": "cloud_run_revision"
+    },
+    "severity": "ERROR",
+    "timestamp": "2026-07-04T16:02:56.593674Z"
+  }
+]

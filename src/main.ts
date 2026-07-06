@@ -41,6 +41,7 @@ async function bootstrap() {
       'https://ia.girs.universitas.legal',
       'https://admin-girs.netlify.app',
       'https://iusurbano.netlify.app',
+      'https://iusurbano.universitas.legal',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

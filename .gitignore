@@ -61,4 +61,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /postgres_data
 
 #google service account
-service-account.json
+service-account.jsonenv.cloudrun.yaml

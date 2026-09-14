@@ -43,7 +43,13 @@ class ChatMetricsDto {
 }
 
 class AnalyticsDto {
-  @ApiProperty({ example: { servidoresPublicos: 45, asesoresPrivados: 75 } })
+  @ApiProperty({
+    example: {
+      servidoresPublicos: 45,
+      asesoresPrivados: 75,
+      ciudadanos: 20,
+    },
+  })
   porTipousuario: any;
 
   @ApiProperty({ example: 60 })

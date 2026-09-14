@@ -70,7 +70,7 @@ export class GetUsersQueryDto {
   municipio?: string;
 
   @ApiPropertyOptional({
-    enum: ['SERVIDOR_PUBLICO', 'ASESOR_PRIVADO'],
+    enum: ['SERVIDOR_PUBLICO', 'ASESOR_PRIVADO', 'CIUDADANO'],
     description: 'Filtrar por tipo de usuario',
   })
   @IsOptional()

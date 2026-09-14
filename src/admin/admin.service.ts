@@ -480,6 +480,7 @@ export class AdminService {
       usersByEstadoCuenta,
       totalServidoresPublicos,
       totalAsesoresPrivados,
+      totalCiudadanos,
       totalSuscritosActivos,
       suspensionesRecientes,
       usuariosHoy,
@@ -558,6 +559,9 @@ export class AdminService {
       }),
       this.prisma.user.count({
         where: { tipoUsuario: 'ASESOR_PRIVADO', isVisible: true },
+      }),
+      this.prisma.user.count({
+        where: { tipoUsuario: 'CIUDADANO', isVisible: true },
       }),
       this.prisma.user.count({
         where: { estadoCuenta: 'SUSCRITO', isActive: true, isVisible: true },
@@ -655,6 +659,7 @@ export class AdminService {
         porTipousuario: {
           servidoresPublicos: totalServidoresPublicos,
           asesoresPrivados: totalAsesoresPrivados,
+          ciudadanos: totalCiudadanos,
         },
         cuentasSuscritasActivas: totalSuscritosActivos,
         suspensionesRecientes: suspensionesRecientes,

@@ -124,6 +124,7 @@ export class AuthService {
     const confirmationToken = crypto.randomBytes(32).toString('hex');
 
     // Determinamos el estado inicial según el tipo de usuario
+    // SERVIDOR_PUBLICO → ACTIVO; ASESOR_PRIVADO y CIUDADANO → PRUEBA_GRATUITA
     const initialEstado =
       tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO
         ? EstadoCuenta.ACTIVO
@@ -144,7 +145,7 @@ export class AuthService {
         profileCompleted: true, // Se marca como completado porque se hace en el registro
         profile: {
           create: {
-            nombreEnte: nombre_ente,
+            nombreEnte: nombre_ente?.trim() ? nombre_ente : null,
             cargo: (cargo as string) === '' ? null : cargo,
             estatusNormativaGirs:
               (estatus_normativa_girs as any) === ''

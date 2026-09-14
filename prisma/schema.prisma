@@ -22,6 +22,7 @@ enum UserRole {
 enum TipoUsuario {
   SERVIDOR_PUBLICO
   ASESOR_PRIVADO
+  CIUDADANO
 }
 
 enum EstatusNormativaGIRS {
@@ -101,7 +102,7 @@ model User {
 
 model UserProfile {
   id               String  @id @default(uuid())
-  nombreEnte       String  @map("nombre_ente")
+  nombreEnte       String? @map("nombre_ente")
   cargo            String?
   plazoEntregaActa String? @map("plazo_entrega_acta")
   estatusNormativaGirs EstatusNormativaGIRS? @map("estatus_normativa_girs")
@@ -187,4 +188,4 @@ model News {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("news")
-}
+}

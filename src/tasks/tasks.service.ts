@@ -5,6 +5,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { EstadoCuenta } from '@prisma/client';
+import { isTipoSuscripcion } from '../common/tipo-usuario.util';
 
 @Injectable()
 export class TasksService {
@@ -158,10 +159,9 @@ export class TasksService {
 
     // 2. Procesamos 1 a 1 para enviar correo y asinar estatus dependiendo del tipo de usuario
     for (const user of caducados) {
-      const nuevoEstado =
-        user.tipoUsuario === 'SERVIDOR_PUBLICO'
-          ? EstadoCuenta.SUSPENDIDO
-          : EstadoCuenta.POR_PAGAR;
+      const nuevoEstado = isTipoSuscripcion(user.tipoUsuario)
+        ? EstadoCuenta.POR_PAGAR
+        : EstadoCuenta.SUSPENDIDO;
 
       await this.prisma.user.update({
         where: { id: user.id },

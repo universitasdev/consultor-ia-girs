@@ -5,6 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { EstadoCuenta, User } from '@prisma/client';
+import { isTipoSuscripcion } from '../../common/tipo-usuario.util';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
@@ -27,10 +28,9 @@ export class SubscriptionGuard implements CanActivate {
       user.estadoCuenta === EstadoCuenta.SUSPENDIDO ||
       user.estadoCuenta === EstadoCuenta.POR_PAGAR
     ) {
-      const isPublicServant = user.tipoUsuario === 'SERVIDOR_PUBLICO';
-      const message = isPublicServant
-        ? 'Acceso denegado: Su cuenta ha sido suspendida. Por favor, comuníquese con el administrador o regularice su documentación.'
-        : 'Acceso denegado: Su prueba gratuita ha caducado. Por favor, realice el pago correspondiente para continuar utilizando el servicio.';
+      const message = isTipoSuscripcion(user.tipoUsuario)
+        ? 'Acceso denegado: Su prueba gratuita ha caducado. Por favor, realice el pago correspondiente para continuar utilizando el servicio.'
+        : 'Acceso denegado: Su cuenta ha sido suspendida. Por favor, comuníquese con el administrador o regularice su documentación.';
 
       throw new ForbiddenException(message);
     }

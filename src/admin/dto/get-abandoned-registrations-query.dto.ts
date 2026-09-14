@@ -33,7 +33,7 @@ export class GetAbandonedRegistrationsQueryDto {
   search?: string;
 
   @ApiPropertyOptional({
-    enum: ['SERVIDOR_PUBLICO', 'ASESOR_PRIVADO'],
+    enum: ['SERVIDOR_PUBLICO', 'ASESOR_PRIVADO', 'CIUDADANO'],
     description: 'Filtrar por tipo de usuario',
   })
   @IsOptional()

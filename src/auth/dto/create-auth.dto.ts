@@ -61,14 +61,25 @@ export class CreateAuthDto {
 
   @ApiProperty({ enum: TipoUsuario, example: TipoUsuario.SERVIDOR_PUBLICO })
   @IsEnum(TipoUsuario, {
-    message: 'tipo_usuario debe ser SERVIDOR_PUBLICO o ASESOR_PRIVADO',
+    message:
+      'tipo_usuario debe ser SERVIDOR_PUBLICO, ASESOR_PRIVADO o CIUDADANO',
   })
   tipo_usuario: TipoUsuario;
 
-  @ApiProperty({ example: 'Ministerio de Ecosocialismo' })
+  @ApiProperty({
+    example: 'Ministerio de Ecosocialismo',
+    required: false,
+    description:
+      'Obligatorio para SERVIDOR_PUBLICO y ASESOR_PRIVADO; no aplica a CIUDADANO',
+  })
+  @ValidateIf(
+    (o) =>
+      o.tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO ||
+      o.tipo_usuario === TipoUsuario.ASESOR_PRIVADO,
+  )
   @IsString()
   @IsNotEmpty({ message: 'El nombre_ente es obligatorio' })
-  nombre_ente: string;
+  nombre_ente?: string;
 
   @ApiProperty({ example: 'Director General', required: false })
   @ValidateIf((o) => o.tipo_usuario === TipoUsuario.SERVIDOR_PUBLICO)

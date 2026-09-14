@@ -25,33 +25,41 @@ export class UsersService {
     const { nombre_ente, cargo, estatus_normativa_girs, ...userData } =
       updateUserDto;
 
+    const isCiudadano = userData.tipoUsuario === 'CIUDADANO';
+    const shouldTouchProfile =
+      Boolean(nombre_ente) ||
+      Boolean(cargo) ||
+      Boolean(estatus_normativa_girs) ||
+      isCiudadano;
+
     // Llama a Prisma para actualizar el usuario y su perfil de forma anidada
     const updatedUser = await this.prisma.user.update({
       where: { id: id }, // Busca al usuario por su ID
       data: {
         ...userData,
         // Realizamos un upsert anidado: si no existe el perfil lo crea, si existe lo actualiza
-        profile:
-          nombre_ente || cargo || estatus_normativa_girs
-            ? {
-                upsert: {
-                  create: {
-                    nombreEnte: nombre_ente || 'Ente por definir',
-                    cargo: cargo || null,
-                    estatusNormativaGirs: estatus_normativa_girs || null,
-                  },
-                  update: {
-                    ...(nombre_ente && { nombreEnte: nombre_ente }),
-                    ...(cargo && { cargo }),
-                    ...(estatus_normativa_girs && {
-                      estatusNormativaGirs: estatus_normativa_girs,
-                    }),
-                  },
+        profile: shouldTouchProfile
+          ? {
+              upsert: {
+                create: {
+                  nombreEnte: nombre_ente || null,
+                  cargo: cargo || null,
+                  estatusNormativaGirs: estatus_normativa_girs || null,
                 },
-              }
-            : undefined,
-        // Si se proporciona el nombre del ente, marcamos el perfil como completado
-        ...(nombre_ente && { profileCompleted: true }),
+                update: {
+                  ...(nombre_ente !== undefined && { nombreEnte: nombre_ente }),
+                  ...(cargo && { cargo }),
+                  ...(estatus_normativa_girs && {
+                    estatusNormativaGirs: estatus_normativa_girs,
+                  }),
+                },
+              },
+            }
+          : undefined,
+        // Si se proporciona el nombre del ente o se marca tipo CIUDADANO, perfil completo
+        ...((nombre_ente || isCiudadano) && {
+          profileCompleted: true,
+        }),
       },
     });
 

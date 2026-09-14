@@ -1,76 +1,65 @@
-// src/ai/ai.service.ts
+// src/ai/ai.service.spec.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SessionsClient } from '@google-cloud/dialogflow-cx';
 import { PrismaService } from '../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AiService {
-  private readonly sessionsClient: SessionsClient;
-  private readonly projectId: string;
-  private readonly location: string;
-  private readonly agentId: string;
+  private readonly logger = new Logger(AiService.name);
+  private readonly gatewayUrl: string;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    const keyFilename = this.configService.get<string>(
-      'GOOGLE_APPLICATION_CREDENTIALS',
-    );
-    const projectId = this.configService.get<string>('DIALOGFLOW_PROJECT_ID');
-    const location = this.configService.get<string>('DIALOGFLOW_LOCATION');
-    const agentId = this.configService.get<string>('DIALOGFLOW_AGENT_ID');
+    this.gatewayUrl = this.configService.get<string>('AI_GATEWAY_URL') || '';
 
-    if (!keyFilename || !projectId || !location || !agentId) {
-      throw new Error(
-        'Faltan variables de entorno necesarias para Dialogflow CX.',
+    if (!this.gatewayUrl) {
+      this.logger.warn(
+        'AI_GATEWAY_URL no está configurado. El chatbot no podrá responder.',
       );
     }
-
-    this.projectId = projectId;
-    this.location = location;
-    this.agentId = agentId;
-    this.sessionsClient = new SessionsClient({ keyFilename });
   }
 
   /**
-   * Envía un texto a Dialogflow CX y devuelve la respuesta del agente.
+   * Envía un mensaje al Gateway AI y devuelve la respuesta del agente.
    */
   async detectIntentText(text: string, sessionId: string): Promise<string> {
-    const sessionPath = this.sessionsClient.projectLocationAgentSessionPath(
-      this.projectId,
-      this.location,
-      this.agentId,
-      sessionId,
-    );
-
-    const request = {
-      session: sessionPath,
-      queryInput: {
-        text: { text: text },
-        languageCode: 'es',
-      },
-    };
+    if (!this.gatewayUrl) {
+      return 'El servicio de IA no está configurado en este momento.';
+    }
 
     try {
-      const [response] = await this.sessionsClient.detectIntent(request);
-      let botResponse = '';
+      const response = await fetch(this.gatewayUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          sessionId,
+        }),
+      });
 
-      for (const message of response.queryResult?.responseMessages || []) {
-        const textParts = message.text?.text || [];
-        botResponse += textParts.join(' ');
+      if (!response.ok) {
+        this.logger.error(
+          `Error del Gateway AI: ${response.status} ${response.statusText}`,
+        );
+        return 'Lo siento, estoy teniendo problemas para conectarme. Por favor, inténtalo más tarde.';
       }
+
+      const data = await response.json();
+
+      const botResponse =
+        data.response || data.reply || data.message || data.text || '';
 
       return (
         botResponse ||
         'No he podido entender eso. ¿Puedes decirlo de otra forma?'
       );
     } catch (error) {
-      console.error('Error al contactar con Dialogflow CX:', error);
+      this.logger.error('Error al contactar con el Gateway AI:', error);
       return 'Lo siento, estoy teniendo problemas para conectarme. Por favor, inténtalo más tarde.';
     }
   }

@@ -17,6 +17,8 @@ enum UserRole {
   PAID_USER // Usuario pago (Pro)
   ADMIN     // Administrador
   ADMIN_VISUALIZADOR // Administrador visualizador
+  CURADOR   // Carga y gestiona documentos legales
+  REVISOR   // Aprueba o rechaza documentos legales
 }
 
 enum TipoUsuario {
@@ -55,6 +57,32 @@ enum EtiquetaCrm {
   ENVIO_DOC               // Documentación ya fue enviada
   NO_TIENE_DOC            // El usuario no posee documentación
   NO_ENVIO_DOC_PLANIFICAR // No envió doc, planificar con ejecutivos hasta confirmar
+}
+
+enum EstadoDocumento {
+  PENDIENTE_REVISION
+  PUBLICADO
+  RECHAZADO
+}
+
+enum MacroTipoDocumento {
+  LEGISLACION
+  ORDENANZA
+  INSTRUMENTO_INTERNACIONAL
+  SENTENCIA
+  SENTENCIA_INTERNACIONAL
+  DOCTRINA
+}
+
+enum LegibilidadPdf {
+  PDF_TEXTO
+  SOLO_IMAGEN
+}
+
+enum AccionRevision {
+  APROBADO
+  RECHAZADO
+  REENVIADO
 }
 
 // 3. --- Definición de tus Modelos (Tablas) ---
@@ -98,6 +126,9 @@ model User {
   profileCompleted Boolean @default(false)
   chatHistory ChatHistory[] // Un usuario puede tener muchos historiales de chat
   crmNotes    CrmNote[]     // Notas dejadas por administradores
+  documentos  Documento[]
+  etiquetas   Etiqueta[]
+  revisionesActuadas DocumentoRevision[]
 }
 
 model UserProfile {
@@ -188,4 +219,82 @@ model News {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("news")
+}
+
+model Etiqueta {
+  id        String    @id @default(uuid())
+  nombre    String    @unique
+  autorId   String?   @map("autor_id")
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  autor      User?               @relation(fields: [autorId], references: [id], onDelete: SetNull)
+  documentos DocumentoEtiqueta[]
+
+  @@index([nombre])
+  @@map("etiquetas")
+}
+
+model Documento {
+  id                     String             @id @default(uuid())
+  autorId                String             @map("autor_id")
+  macroTipo              MacroTipoDocumento @map("macro_tipo")
+  carpetaSlug            String             @map("carpeta_slug")
+  tituloIntegro          String             @map("titulo_integro")
+  tituloBreve            String             @map("titulo_breve")
+  parametrosEspecificos  Json               @map("parametros_especificos")
+  enteEmisor             String             @map("ente_emisor")
+  fechaPublicacion       DateTime?          @map("fecha_publicacion") @db.Date
+  categorias             String?            @db.Text
+  resumenDescriptivo     String             @map("resumen_descriptivo") @db.Text
+  resumenCorto           String?            @map("resumen_corto") @db.Text
+  palabrasClave          String?            @map("palabras_clave") @db.Text
+  legibilidadPdf         LegibilidadPdf     @default(PDF_TEXTO) @map("legibilidad_pdf")
+  archivoPath            String             @map("archivo_path")
+  archivoUrl             String             @map("archivo_url") @db.VarChar(2048)
+  estado                 EstadoDocumento    @default(PENDIENTE_REVISION)
+  motivoRechazo          String?            @map("motivo_rechazo") @db.Text
+  visibleEnBiblioteca    Boolean            @default(true) @map("visible_en_biblioteca")
+  deletedAt              DateTime?          @map("deleted_at")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+
+  autor      User                 @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  etiquetas  DocumentoEtiqueta[]
+  revisiones DocumentoRevision[]
+
+  @@index([autorId, estado])
+  @@index([macroTipo, estado])
+  @@index([estado, createdAt])
+  @@index([estado, visibleEnBiblioteca])
+  @@map("documentos")
+}
+
+model DocumentoRevision {
+  id          String         @id @default(uuid())
+  documentoId String         @map("documento_id")
+  actorId     String         @map("actor_id")
+  accion      AccionRevision
+  motivo      String?        @db.Text
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  documento Documento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  actor     User      @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([documentoId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("documento_revisiones")
+}
+
+model DocumentoEtiqueta {
+  documentoId String @map("documento_id")
+  etiquetaId  String @map("etiqueta_id")
+
+  documento Documento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  etiqueta  Etiqueta  @relation(fields: [etiquetaId], references: [id], onDelete: Cascade)
+
+  @@id([documentoId, etiquetaId])
+  @@index([etiquetaId])
+  @@map("documento_etiquetas")
 }

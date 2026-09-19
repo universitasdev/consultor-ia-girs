@@ -14,6 +14,8 @@ import { AdminModule } from './admin/admin.module';
 import { SearchModule } from './search/search.module';
 import { BibliotecaLegalModule } from './biblioteca-legal/biblioteca-legal.module';
 import { YoutubeModule } from './youtube/youtube.module';
+import { DocumentsModule } from './documents/documents.module';
+import { EtiquetasModule } from './etiquetas/etiquetas.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { YoutubeModule } from './youtube/youtube.module';
     SearchModule,
     BibliotecaLegalModule,
     YoutubeModule,
+    DocumentsModule,
+    EtiquetasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

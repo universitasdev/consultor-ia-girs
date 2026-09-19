@@ -2,10 +2,12 @@
 /**
  * Seed de usuarios de prueba para desarrollo local.
  *
- * Crea 3 usuarios con los 3 roles principales del sistema:
- *   1. ADMIN            → admin@test.com       / Admin123!
+ * Crea usuarios de prueba con los roles principales del sistema:
+ *   1. ADMIN              → admin@test.com       / Admin123!
  *   2. ADMIN_VISUALIZADOR → visualizador@test.com / Visual123!
- *   3. USER (estándar)  → usuario@test.com     / User123!
+ *   3. USER (estándar)    → usuario@test.com     / User123!
+ *   4. CURADOR            → curador@test.com     / Curador123!
+ *   5. REVISOR            → revisor@test.com     / Revisor123!
  *
  * Todos quedan con isEmailVerified=true para poder hacer login directamente.
  *
@@ -63,6 +65,32 @@ const SEED_USERS = [
     profileData: {
       nombreEnte: 'Gobernación del Estado',
       cargo: 'Técnico Municipal',
+    },
+  },
+  {
+    email: 'curador@test.com',
+    password: 'Curador123!',
+    nombre: 'Ana',
+    apellido: 'Curadora',
+    role: UserRole.CURADOR,
+    tipoUsuario: TipoUsuario.SERVIDOR_PUBLICO,
+    estadoCuenta: EstadoCuenta.ACTIVO,
+    profileData: {
+      nombreEnte: 'Biblioteca Legal',
+      cargo: 'Curador de Documentos',
+    },
+  },
+  {
+    email: 'revisor@test.com',
+    password: 'Revisor123!',
+    nombre: 'Pedro',
+    apellido: 'Revisor',
+    role: UserRole.REVISOR,
+    tipoUsuario: TipoUsuario.SERVIDOR_PUBLICO,
+    estadoCuenta: EstadoCuenta.ACTIVO,
+    profileData: {
+      nombreEnte: 'Biblioteca Legal',
+      cargo: 'Revisor de Documentos',
     },
   },
 ] as const;
@@ -123,6 +151,8 @@ async function main() {
   console.log('ADMIN           → admin@test.com       / Admin123!');
   console.log('ADMIN_VISUAL    → visualizador@test.com / Visual123!');
   console.log('USER estándar   → usuario@test.com     / User123!');
+  console.log('CURADOR         → curador@test.com     / Curador123!');
+  console.log('REVISOR         → revisor@test.com     / Revisor123!');
   console.log('==============================================\n');
 }
 

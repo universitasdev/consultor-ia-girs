@@ -4,9 +4,11 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service'; // <-- 1. Importa Prisma
-import { UserRole, Prisma, TipoUsuario } from '@prisma/client';
+import { UserRole, Prisma, TipoUsuario, EstadoCuenta } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateEstadoCuentaDto } from './dto/update-estado-cuenta.dto';
 import { CreateCrmNoteDto } from './dto/create-crm-note.dto';
@@ -16,11 +18,206 @@ import { GetChatQueryDto } from './dto/get-chat-query.dto';
 import { GetAbandonedRegistrationsQueryDto } from './dto/get-abandoned-registrations-query.dto';
 import { CreateAbandonedNoteDto } from './dto/create-abandoned-note.dto';
 import { CreateNewsDto } from './dto/create-news.dto';
+import {
+  CreateStaffUserDto,
+  STAFF_ROLES,
+} from './dto/create-staff-user.dto';
+import { UpdateStaffUserDto } from './dto/update-staff-user.dto';
+import { GetStaffQueryDto } from './dto/get-staff-query.dto';
+
+/** Roles que no pertenecen al CRM de usuarios de producto */
+const CRM_EXCLUDED_ROLES: UserRole[] = [
+  UserRole.ADMIN,
+  UserRole.ADMIN_VISUALIZADOR,
+  UserRole.CURADOR,
+  UserRole.REVISOR,
+];
+
+const STAFF_SELECT = {
+  id: true,
+  email: true,
+  nombre: true,
+  apellido: true,
+  role: true,
+  isActive: true,
+  isEmailVerified: true,
+  estadoCuenta: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 @Injectable()
 export class AdminService {
   // 2. Inyecta Prisma
   constructor(private prisma: PrismaService) {}
+
+  private assertStaffRole(role: UserRole): void {
+    if (!STAFF_ROLES.includes(role as (typeof STAFF_ROLES)[number])) {
+      throw new NotFoundException('Usuario staff no encontrado.');
+    }
+  }
+
+  async createStaffUser(dto: CreateStaffUserDto) {
+    if (!STAFF_ROLES.includes(dto.role)) {
+      throw new BadRequestException(
+        'El rol debe ser CURADOR o REVISOR.',
+      );
+    }
+
+    const email = dto.email.trim().toLowerCase();
+    const existing = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    if (existing) {
+      throw new ConflictException('El email ya está registrado.');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const created = await this.prisma.user.create({
+      data: {
+        nombre: dto.nombre.trim(),
+        apellido: dto.apellido.trim(),
+        email,
+        password: hashedPassword,
+        role: dto.role,
+        isEmailVerified: true,
+        isActive: true,
+        isVisible: true,
+        profileCompleted: true,
+        estadoCuenta: EstadoCuenta.ACTIVO,
+      },
+      select: STAFF_SELECT,
+    });
+
+    return created;
+  }
+
+  async findAllStaffUsers(query: GetStaffQueryDto) {
+    const { page = 1, limit = 10, role, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.UserWhereInput = {
+      role: role ? role : { in: [...STAFF_ROLES] },
+      isVisible: true,
+    };
+
+    if (search?.trim()) {
+      const term = search.trim();
+      where.OR = [
+        { email: { contains: term, mode: 'insensitive' } },
+        { nombre: { contains: term, mode: 'insensitive' } },
+        { apellido: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+
+    const [totalItems, data] = await Promise.all([
+      this.prisma.user.count({ where }),
+      this.prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: STAFF_SELECT,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit) || 1,
+        currentPage: page,
+      },
+    };
+  }
+
+  async findOneStaffUser(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: STAFF_SELECT,
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario staff con ID ${id} no encontrado.`);
+    }
+
+    this.assertStaffRole(user.role);
+    return user;
+  }
+
+  async updateStaffUser(id: string, dto: UpdateStaffUserDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario staff con ID ${id} no encontrado.`);
+    }
+
+    this.assertStaffRole(user.role);
+
+    if (dto.role && !STAFF_ROLES.includes(dto.role)) {
+      throw new BadRequestException(
+        'El rol debe ser CURADOR o REVISOR.',
+      );
+    }
+
+    if (dto.email) {
+      const email = dto.email.trim().toLowerCase();
+      const existing = await this.prisma.user.findUnique({
+        where: { email },
+      });
+      if (existing && existing.id !== id) {
+        throw new ConflictException('El email ya está registrado.');
+      }
+    }
+
+    const data: Prisma.UserUpdateInput = {};
+    if (dto.nombre !== undefined) data.nombre = dto.nombre.trim();
+    if (dto.apellido !== undefined) data.apellido = dto.apellido.trim();
+    if (dto.email !== undefined) data.email = dto.email.trim().toLowerCase();
+    if (dto.role !== undefined) data.role = dto.role;
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
+    if (dto.password !== undefined) {
+      data.password = await bcrypt.hash(dto.password, 10);
+      data.hashedRefreshToken = null;
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      select: STAFF_SELECT,
+    });
+  }
+
+  async deleteStaffUser(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException(`Usuario staff con ID ${id} no encontrado.`);
+    }
+
+    this.assertStaffRole(user.role);
+
+    const deletedEmail = `${user.email}_deleted_${Date.now()}`;
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        isActive: false,
+        isVisible: false,
+        email: deletedEmail,
+        hashedRefreshToken: null,
+      },
+      select: STAFF_SELECT,
+    });
+
+    return {
+      message: 'Usuario staff eliminado pasivamente. El email ha sido liberado.',
+      user: updatedUser,
+    };
+  }
 
   // 3. Añade la lógica para cambiar el rol
   async updateUserRole(userId: string, newRole: UserRole) {
@@ -69,7 +266,7 @@ export class AdminService {
     // Construir el filtro dinámicamente
     const where: Prisma.UserWhereInput = {
       role: {
-        notIn: [UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR],
+        notIn: CRM_EXCLUDED_ROLES,
       },
       isVisible: true, // Solo mostrar usuarios visibles por defecto
     };
@@ -80,7 +277,11 @@ export class AdminService {
     }
 
     if (role) {
-      where.role = role;
+      if (CRM_EXCLUDED_ROLES.includes(role)) {
+        where.role = { in: [] };
+      } else {
+        where.role = role;
+      }
     }
 
     if (estado) {
@@ -166,6 +367,10 @@ export class AdminService {
     });
 
     if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado.`);
+    }
+
+    if (CRM_EXCLUDED_ROLES.includes(user.role)) {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado.`);
     }
 
@@ -287,9 +492,13 @@ export class AdminService {
 
     if (
       user.role === UserRole.ADMIN ||
-      user.role === UserRole.ADMIN_VISUALIZADOR
+      user.role === UserRole.ADMIN_VISUALIZADOR ||
+      user.role === UserRole.CURADOR ||
+      user.role === UserRole.REVISOR
     ) {
-      throw new ForbiddenException('No puedes eliminar a otro administrador.');
+      throw new ForbiddenException(
+        'No puedes eliminar a un administrador o usuario staff desde este endpoint.',
+      );
     }
 
     // Liberar el email para futuros registros añadiendo sufijo _deleted_
@@ -466,6 +675,11 @@ export class AdminService {
 
     const umbral48Horas = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
+    const productUserFilter: Prisma.UserWhereInput = {
+      isVisible: true,
+      role: { notIn: CRM_EXCLUDED_ROLES },
+    };
+
     const [
       totalUsers,
       activeUsers,
@@ -496,30 +710,34 @@ export class AdminService {
       semana5,
       usuariosNoVerificados,
     ] = await Promise.all([
-      this.prisma.user.count({ where: { isVisible: true } }),
-      this.prisma.user.count({ where: { isActive: true, isVisible: true } }),
-      this.prisma.user.count({ where: { isActive: false, isVisible: true } }),
+      this.prisma.user.count({ where: productUserFilter }),
       this.prisma.user.count({
-        where: { isEmailVerified: true, isVisible: true },
+        where: { ...productUserFilter, isActive: true },
+      }),
+      this.prisma.user.count({
+        where: { ...productUserFilter, isActive: false },
+      }),
+      this.prisma.user.count({
+        where: { ...productUserFilter, isEmailVerified: true },
       }),
       this.prisma.user.count({
         where: { role: { in: [UserRole.ADMIN, UserRole.ADMIN_VISUALIZADOR] } },
       }),
       this.prisma.user.groupBy({
         by: ['role'],
-        where: { isVisible: true },
+        where: productUserFilter,
         _count: { role: true },
       }),
       this.prisma.chatHistory.count({
-        where: { user: { isVisible: true } },
+        where: { user: productUserFilter },
       }),
       this.prisma.chatHistory.findMany({
         distinct: ['sessionId'],
-        where: { user: { isVisible: true } },
+        where: { user: productUserFilter },
         select: { sessionId: true },
       }),
       this.prisma.user.findMany({
-        where: { isVisible: true },
+        where: productUserFilter,
         take: 5,
         orderBy: { createdAt: 'desc' },
         select: {
@@ -534,8 +752,8 @@ export class AdminService {
       }),
       this.prisma.user.findMany({
         where: {
+          ...productUserFilter,
           estadoCuenta: 'PRUEBA_GRATUITA',
-          isVisible: true,
           fechaVencimientoAcceso: {
             lte: umbral48Horas,
           },
@@ -551,80 +769,84 @@ export class AdminService {
       }),
       this.prisma.user.groupBy({
         by: ['estadoCuenta'],
-        where: { isVisible: true },
+        where: productUserFilter,
         _count: { estadoCuenta: true },
       }),
       this.prisma.user.count({
-        where: { tipoUsuario: 'SERVIDOR_PUBLICO', isVisible: true },
+        where: { ...productUserFilter, tipoUsuario: 'SERVIDOR_PUBLICO' },
       }),
       this.prisma.user.count({
-        where: { tipoUsuario: 'ASESOR_PRIVADO', isVisible: true },
+        where: { ...productUserFilter, tipoUsuario: 'ASESOR_PRIVADO' },
       }),
       this.prisma.user.count({
-        where: { tipoUsuario: 'CIUDADANO', isVisible: true },
-      }),
-      this.prisma.user.count({
-        where: { estadoCuenta: 'SUSCRITO', isActive: true, isVisible: true },
+        where: { ...productUserFilter, tipoUsuario: 'CIUDADANO' },
       }),
       this.prisma.user.count({
         where: {
+          ...productUserFilter,
+          estadoCuenta: 'SUSCRITO',
+          isActive: true,
+        },
+      }),
+      this.prisma.user.count({
+        where: {
+          ...productUserFilter,
           estadoCuenta: 'SUSPENDIDO',
-          isVisible: true,
           updatedAt: { gte: last30Days },
         },
       }),
       // Comparativa
       this.prisma.user.count({
-        where: { createdAt: { gte: startOfToday }, isVisible: true },
+        where: { ...productUserFilter, createdAt: { gte: startOfToday } },
       }),
       this.prisma.user.count({
-        where: { createdAt: { gte: last7Days }, isVisible: true },
+        where: { ...productUserFilter, createdAt: { gte: last7Days } },
       }),
       this.prisma.user.count({
         where: {
+          ...productUserFilter,
           createdAt: { gte: prev7Days, lt: last7Days },
-          isVisible: true,
         },
       }),
       this.prisma.user.count({
-        where: { createdAt: { gte: last30Days }, isVisible: true },
+        where: { ...productUserFilter, createdAt: { gte: last30Days } },
       }),
       this.prisma.user.count({
         where: {
+          ...productUserFilter,
           createdAt: { gte: prev30Days, lt: last30Days },
-          isVisible: true,
         },
       }),
       // Semanas para gráfico
       this.prisma.user.count({
-        where: { createdAt: { gte: last7Days }, isVisible: true },
+        where: { ...productUserFilter, createdAt: { gte: last7Days } },
       }),
       this.prisma.user.count({
         where: {
+          ...productUserFilter,
           createdAt: { gte: prev7Days, lt: last7Days },
-          isVisible: true,
         },
       }),
       this.prisma.user.count({
         where: {
+          ...productUserFilter,
           createdAt: { gte: prev14Days, lt: prev7Days },
-          isVisible: true,
         },
       }),
       this.prisma.user.count({
         where: {
+          ...productUserFilter,
           createdAt: { gte: prev21Days, lt: prev14Days },
-          isVisible: true,
         },
       }),
       this.prisma.user.count({
         where: {
+          ...productUserFilter,
           createdAt: { gte: prev28Days, lt: prev21Days },
-          isVisible: true,
         },
       }),
       this.prisma.user.count({
-        where: { isEmailVerified: false, isVisible: true },
+        where: { ...productUserFilter, isEmailVerified: false },
       }),
     ]);
 

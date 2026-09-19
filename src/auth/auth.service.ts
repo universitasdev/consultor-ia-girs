@@ -30,6 +30,19 @@ export class AuthService {
     console.log('¡¡¡ AuthService Cargado CORRECTAMENTE !!!');
   }
 
+  /** Email canónico para auth (trim + minúsculas). */
+  private normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  /** Busca usuario por email sin importar mayúsculas (usuarios legacy). */
+  private findUserByEmail(email: string) {
+    const normalized = this.normalizeEmail(email);
+    return this.prisma.user.findFirst({
+      where: { email: { equals: normalized, mode: 'insensitive' } },
+    });
+  }
+
   /**
    * Genera un nuevo par de Access Token y Refresh Token.
    */
@@ -111,12 +124,11 @@ export class AuthService {
       cargo,
       estatus_normativa_girs,
     } = createAuthDto;
-    console.log(`[register] Intentando registrar usuario: ${email}`);
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    const normalizedEmail = this.normalizeEmail(email);
+    console.log(`[register] Intentando registrar usuario: ${normalizedEmail}`);
+    const existingUser = await this.findUserByEmail(normalizedEmail);
     if (existingUser) {
-      console.warn(`[register] Usuario ${email} ya existe.`);
+      console.warn(`[register] Usuario ${normalizedEmail} ya existe.`);
       throw new ConflictException('El correo electrónico ya está registrado.');
     }
 
@@ -132,7 +144,7 @@ export class AuthService {
 
     const newUser = await this.prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
         nombre,
         apellido,
@@ -155,7 +167,9 @@ export class AuthService {
         },
       },
     });
-    console.log(`[register] Usuario ${email} creado con ID: ${newUser.id}`);
+    console.log(
+      `[register] Usuario ${normalizedEmail} creado con ID: ${newUser.id}`,
+    );
 
     try {
       await this.emailService.sendConfirmationEmail(
@@ -163,10 +177,12 @@ export class AuthService {
         confirmationToken,
         newUser.nombre,
       );
-      console.log(`[register] Email de confirmación enviado a ${email}.`);
+      console.log(
+        `[register] Email de confirmación enviado a ${normalizedEmail}.`,
+      );
     } catch (emailError) {
       console.error(
-        `[register] ERROR al enviar email de confirmación a ${email}:`,
+        `[register] ERROR al enviar email de confirmación a ${normalizedEmail}:`,
         emailError,
       );
     }
@@ -181,14 +197,15 @@ export class AuthService {
     email: string,
     pass: string,
   ): Promise<Omit<User, 'password'> | null> {
-    console.log(`[validateUser] Validando credenciales para: ${email}`);
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = this.normalizeEmail(email);
+    console.log(`[validateUser] Validando credenciales para: ${normalizedEmail}`);
+    const user = await this.findUserByEmail(normalizedEmail);
     if (user && (await bcrypt.compare(pass, user.password))) {
-      console.log(`[validateUser] Credenciales válidas para: ${email}`);
+      console.log(`[validateUser] Credenciales válidas para: ${normalizedEmail}`);
       // Add check for email verification
       if (!user.isEmailVerified) {
         console.warn(
-          `[validateUser] Usuario ${email} no ha verificado su correo.`,
+          `[validateUser] Usuario ${normalizedEmail} no ha verificado su correo.`,
         );
         throw new UnauthorizedException(
           'Por favor, confirma tu correo electrónico antes de iniciar sesión.',
@@ -197,12 +214,12 @@ export class AuthService {
 
       // Verificar si la cuenta está activa (Soft Delete)
       if (!user.isActive) {
-        console.warn(`[validateUser] Usuario ${email} está inactivo.`);
+        console.warn(`[validateUser] Usuario ${normalizedEmail} está inactivo.`);
         throw new UnauthorizedException('Su cuenta ha sido desactivada.');
       }
       return JwtStrategy.excludePassword(user);
     }
-    console.warn(`[validateUser] Credenciales inválidas para: ${email}`);
+    console.warn(`[validateUser] Credenciales inválidas para: ${normalizedEmail}`);
     return null;
   }
 
@@ -370,12 +387,13 @@ export class AuthService {
    * Envía un OTP para el reseteo de contraseña.
    */
   async forgotPassword(email: string) {
-    console.log(`[forgotPassword] Solicitud para: ${email}`);
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = this.normalizeEmail(email);
+    console.log(`[forgotPassword] Solicitud para: ${normalizedEmail}`);
+    const user = await this.findUserByEmail(normalizedEmail);
 
     if (!user) {
       console.log(
-        `[forgotPassword] Usuario ${email} no encontrado (mensaje genérico devuelto).`,
+        `[forgotPassword] Usuario ${normalizedEmail} no encontrado (mensaje genérico devuelto).`,
       );
       return {
         message:
@@ -386,23 +404,25 @@ export class AuthService {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
     console.log(
-      `[forgotPassword] Generado OTP para ${email}. Guardando en BD...`,
+      `[forgotPassword] Generado OTP para ${normalizedEmail}. Guardando en BD...`,
     );
 
     await this.prisma.user.update({
-      where: { email },
+      where: { id: user.id },
       data: { otp, otpExpiresAt },
     });
     console.log(
-      `[forgotPassword] OTP guardado para ${email}. Enviando email...`,
+      `[forgotPassword] OTP guardado para ${normalizedEmail}. Enviando email...`,
     );
 
     try {
       await this.emailService.sendPasswordResetOtp(user.email, otp);
-      console.log(`[forgotPassword] Email con OTP enviado a ${email}.`);
+      console.log(
+        `[forgotPassword] Email con OTP enviado a ${normalizedEmail}.`,
+      );
     } catch (emailError) {
       console.error(
-        `[forgotPassword] ERROR al enviar OTP a ${email}:`,
+        `[forgotPassword] ERROR al enviar OTP a ${normalizedEmail}:`,
         emailError,
       );
     }
@@ -417,8 +437,11 @@ export class AuthService {
    * Verifica el OTP recibido.
    */
   async verifyOtp(email: string, otp: string) {
-    console.log(`[verifyOtp] Verificando OTP ${otp} para ${email}`);
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = this.normalizeEmail(email);
+    console.log(
+      `[verifyOtp] Verificando OTP ${otp} para ${normalizedEmail}`,
+    );
+    const user = await this.findUserByEmail(normalizedEmail);
 
     if (
       !user ||
@@ -428,20 +451,20 @@ export class AuthService {
       new Date() > user.otpExpiresAt
     ) {
       console.warn(
-        `[verifyOtp] Verificación fallida para ${email} con OTP ${otp}`,
+        `[verifyOtp] Verificación fallida para ${normalizedEmail} con OTP ${otp}`,
       );
       throw new UnauthorizedException('OTP inválido o expirado.');
     }
     console.log(
-      `[verifyOtp] OTP ${otp} válido para ${email}. Limpiando OTP de BD...`,
+      `[verifyOtp] OTP ${otp} válido para ${normalizedEmail}. Limpiando OTP de BD...`,
     );
 
     await this.prisma.user.update({
-      where: { email },
+      where: { id: user.id },
       data: { otp: null, otpExpiresAt: null },
     });
 
-    console.log(`[verifyOtp] OTP limpiado para ${email}.`);
+    console.log(`[verifyOtp] OTP limpiado para ${normalizedEmail}.`);
     return { message: 'OTP verificado exitosamente.' };
   }
 
@@ -449,28 +472,31 @@ export class AuthService {
    * Resetea la contraseña del usuario.
    */
   async resetPassword(email: string, newPassword: string) {
-    console.log(`[resetPassword] Reseteando contraseña para ${email}`);
-    const user = await this.prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = this.normalizeEmail(email);
+    console.log(`[resetPassword] Reseteando contraseña para ${normalizedEmail}`);
+    const user = await this.findUserByEmail(normalizedEmail);
     if (!user) {
       console.error(
-        `[resetPassword] Usuario ${email} no encontrado durante reseteo.`,
+        `[resetPassword] Usuario ${normalizedEmail} no encontrado durante reseteo.`,
       );
       throw new NotFoundException('Usuario no encontrado.');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     console.log(
-      `[resetPassword] Nueva contraseña hasheada para ${email}. Actualizando BD...`,
+      `[resetPassword] Nueva contraseña hasheada para ${normalizedEmail}. Actualizando BD...`,
     );
     await this.prisma.user.update({
-      where: { email },
+      where: { id: user.id },
       data: {
         password: hashedPassword,
         otp: null,
         otpExpiresAt: null,
       },
     });
-    console.log(`[resetPassword] Contraseña actualizada en BD para ${email}.`);
+    console.log(
+      `[resetPassword] Contraseña actualizada en BD para ${normalizedEmail}.`,
+    );
     return { message: 'Contraseña actualizada exitosamente.' };
   }
 

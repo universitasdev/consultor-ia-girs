@@ -3,6 +3,8 @@ import { MacroTipoDocumento } from '@prisma/client';
 
 export const URBANISMO_ROOT = 'urbanismo';
 export const PENDIENTES_FOLDER = 'pendientes';
+/** Fuera del KB del agente: no indexar este prefijo. */
+export const OCULTOS_FOLDER = 'ocultos';
 
 export const MACRO_SLUGS: Record<MacroTipoDocumento, string> = {
   LEGISLACION: 'legislacion',
@@ -23,6 +25,27 @@ export function pendientesPath(filename: string): string {
 
 export function publishedPath(macro: MacroTipoDocumento, filename: string): string {
   return `${URBANISMO_ROOT}/${slugForMacro(macro)}/${filename}`;
+}
+
+export function hiddenPath(macro: MacroTipoDocumento, filename: string): string {
+  return `${URBANISMO_ROOT}/${OCULTOS_FOLDER}/${slugForMacro(macro)}/${filename}`;
+}
+
+export function isPendingGcsPath(archivoPath: string): boolean {
+  return archivoPath.includes(`/${PENDIENTES_FOLDER}/`);
+}
+
+export function isHiddenGcsPath(archivoPath: string): boolean {
+  return archivoPath.includes(`/${OCULTOS_FOLDER}/`);
+}
+
+/** Está en carpeta macro publicada (KB), no en pendientes ni ocultos. */
+export function isPublishedMacroGcsPath(archivoPath: string): boolean {
+  if (!archivoPath.startsWith(`${URBANISMO_ROOT}/`)) return false;
+  if (isPendingGcsPath(archivoPath) || isHiddenGcsPath(archivoPath)) return false;
+  const parts = archivoPath.split('/');
+  // urbanismo / {slug} / filename
+  return parts.length >= 3 && Object.values(MACRO_SLUGS).includes(parts[1]);
 }
 
 export function sanitizeFilename(originalName: string): string {

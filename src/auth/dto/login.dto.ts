@@ -1,9 +1,11 @@
 // src/auth/dto/login.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import { NormalizeEmail } from './normalize-email';
 
 export class LoginDto {
   @ApiProperty({ example: 'juan.perez@example.com' })
+  @NormalizeEmail()
   @IsEmail({}, { message: 'El email debe ser un correo válido.' })
   email: string;
 

@@ -15,7 +15,12 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { GcsDocumentsService } from './gcs-documents.service';
-import { PENDIENTES_FOLDER, slugForMacro } from './documents.paths';
+import {
+  isHiddenGcsPath,
+  isPendingGcsPath,
+  isPublishedMacroGcsPath,
+  slugForMacro,
+} from './documents.paths';
 import {
   GetDocumentsQueryDto,
   RejectDocumentDto,
@@ -77,7 +82,7 @@ export class DocumentsService {
   }
 
   private isPendingPath(archivoPath: string) {
-    return archivoPath.includes(`/${PENDIENTES_FOLDER}/`);
+    return isPendingGcsPath(archivoPath);
   }
 
   private extractEnteEmisor(
@@ -197,8 +202,15 @@ export class DocumentsService {
     if (!file) {
       throw new BadRequestException('El archivo PDF es obligatorio.');
     }
-    if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Solo se permiten archivos PDF.');
+    const looksPdf =
+      file.mimetype === 'application/pdf' ||
+      (!file.mimetype && file.originalname?.toLowerCase().endsWith('.pdf')) ||
+      (file.mimetype === 'application/octet-stream' &&
+        file.originalname?.toLowerCase().endsWith('.pdf'));
+    if (!looksPdf) {
+      throw new BadRequestException(
+        `Solo se permiten archivos PDF. (recibido: ${file.mimetype || 'sin tipo'})`,
+      );
     }
 
     const enteEmisor = this.extractEnteEmisor(
@@ -429,8 +441,17 @@ export class DocumentsService {
       );
     }
 
-    if (file && file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Solo se permiten archivos PDF.');
+    if (file) {
+      const looksPdf =
+        file.mimetype === 'application/pdf' ||
+        (!file.mimetype && file.originalname?.toLowerCase().endsWith('.pdf')) ||
+        (file.mimetype === 'application/octet-stream' &&
+          file.originalname?.toLowerCase().endsWith('.pdf'));
+      if (!looksPdf) {
+        throw new BadRequestException(
+          `Solo se permiten archivos PDF. (recibido: ${file.mimetype || 'sin tipo'})`,
+        );
+      }
     }
 
     const enteEmisor = this.extractEnteEmisor(
@@ -555,6 +576,14 @@ export class DocumentsService {
       );
       archivoPath = moved.path;
       archivoUrl = moved.url;
+    } else if (isHiddenGcsPath(doc.archivoPath)) {
+      // Re-aprobación tras rechazo de publicado: volver al KB
+      const moved = await this.gcs.moveFromHiddenToPublished(
+        doc.archivoPath,
+        doc.macroTipo,
+      );
+      archivoPath = moved.path;
+      archivoUrl = moved.url;
     }
 
     const updated = await this.prisma.documento.update({
@@ -594,12 +623,27 @@ export class DocumentsService {
 
     const motivo = dto.motivoRechazo.trim();
 
+    let archivoPath = doc.archivoPath;
+    let archivoUrl = doc.archivoUrl;
+
+    // Si estaba en carpeta macro (KB), sacarlo a ocultos para que el agente no lo indexe.
+    if (
+      doc.estado === EstadoDocumento.PUBLICADO &&
+      isPublishedMacroGcsPath(doc.archivoPath)
+    ) {
+      const moved = await this.gcs.moveToHidden(doc.archivoPath, doc.macroTipo);
+      archivoPath = moved.path;
+      archivoUrl = moved.url;
+    }
+
     const updated = await this.prisma.documento.update({
       where: { id },
       data: {
         estado: EstadoDocumento.RECHAZADO,
         motivoRechazo: motivo,
         visibleEnBiblioteca: false,
+        archivoPath,
+        archivoUrl,
       },
       include: documentoInclude,
     });
@@ -614,10 +658,7 @@ export class DocumentsService {
     return updated;
   }
 
-  async updateVisibility(
-    id: string,
-    dto: UpdateVisibilityDto,
-  ) {
+  async updateVisibility(id: string, dto: UpdateVisibilityDto) {
     const doc = await this.prisma.documento.findFirst({
       where: { id, deletedAt: null },
     });
@@ -628,9 +669,38 @@ export class DocumentsService {
       );
     }
 
+    let archivoPath = doc.archivoPath;
+    let archivoUrl = doc.archivoUrl;
+
+    if (!dto.visibleEnBiblioteca) {
+      // Ocultar: salir del KB (carpeta macro → ocultos)
+      if (isPublishedMacroGcsPath(doc.archivoPath)) {
+        const moved = await this.gcs.moveToHidden(
+          doc.archivoPath,
+          doc.macroTipo,
+        );
+        archivoPath = moved.path;
+        archivoUrl = moved.url;
+      }
+    } else {
+      // Mostrar: volver al KB (ocultos → carpeta macro)
+      if (isHiddenGcsPath(doc.archivoPath)) {
+        const moved = await this.gcs.moveFromHiddenToPublished(
+          doc.archivoPath,
+          doc.macroTipo,
+        );
+        archivoPath = moved.path;
+        archivoUrl = moved.url;
+      }
+    }
+
     return this.prisma.documento.update({
       where: { id },
-      data: { visibleEnBiblioteca: dto.visibleEnBiblioteca },
+      data: {
+        visibleEnBiblioteca: dto.visibleEnBiblioteca,
+        archivoPath,
+        archivoUrl,
+      },
       include: documentoInclude,
     });
   }

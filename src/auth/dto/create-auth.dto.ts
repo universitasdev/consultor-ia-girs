@@ -10,12 +10,14 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { TipoUsuario, EstatusNormativaGIRS } from '@prisma/client';
+import { NormalizeEmail } from './normalize-email';
 
 export class CreateAuthDto {
   @ApiProperty({
     example: 'juan.perez@example.com',
     description: 'Correo electrónico del usuario',
   }) // <-- 2. Añade decorador
+  @NormalizeEmail()
   @IsEmail({}, { message: 'El email debe ser un correo válido.' })
   email: string;
 

@@ -8,6 +8,7 @@ import { Storage } from '@google-cloud/storage';
 import * as fs from 'fs';
 import { MacroTipoDocumento } from '@prisma/client';
 import {
+  hiddenPath,
   pendientesPath,
   publishedPath,
   sanitizeFilename,
@@ -42,6 +43,10 @@ export class GcsDocumentsService {
     return this.bucketName;
   }
 
+  private publicUrl(path: string): string {
+    return `https://storage.googleapis.com/${this.bucketName}/${path}`;
+  }
+
   async uploadPending(
     file: Express.Multer.File,
   ): Promise<{ path: string; url: string; filename: string }> {
@@ -71,33 +76,60 @@ export class GcsDocumentsService {
       );
     }
 
-    const url = `https://storage.googleapis.com/${this.bucketName}/${path}`;
-    return { path, url, filename };
+    return { path, url: this.publicUrl(path), filename };
   }
 
-  async moveToPublished(
+  async moveObject(
     currentPath: string,
-    macro: MacroTipoDocumento,
+    destPath: string,
   ): Promise<{ path: string; url: string }> {
-    const filename = currentPath.split('/').pop() || sanitizeFilename('documento.pdf');
-    const destPath = publishedPath(macro, filename);
+    if (currentPath === destPath) {
+      return { path: destPath, url: this.publicUrl(destPath) };
+    }
+
     const bucket = this.storage.bucket(this.bucketName);
 
     try {
       await bucket.file(currentPath).copy(bucket.file(destPath));
       await bucket.file(currentPath).delete({ ignoreNotFound: true });
     } catch (error) {
-      this.logger.error(
-        `Error moviendo ${currentPath} → ${destPath}`,
-        error,
-      );
+      this.logger.error(`Error moviendo ${currentPath} → ${destPath}`, error);
       throw new InternalServerErrorException(
-        'No se pudo mover el documento a la carpeta publicada.',
+        'No se pudo mover el documento en el almacenamiento.',
       );
     }
 
-    const url = `https://storage.googleapis.com/${this.bucketName}/${destPath}`;
-    return { path: destPath, url };
+    return { path: destPath, url: this.publicUrl(destPath) };
+  }
+
+  async moveToPublished(
+    currentPath: string,
+    macro: MacroTipoDocumento,
+  ): Promise<{ path: string; url: string }> {
+    const filename =
+      currentPath.split('/').pop() || sanitizeFilename('documento.pdf');
+    const destPath = publishedPath(macro, filename);
+    return this.moveObject(currentPath, destPath);
+  }
+
+  async moveToHidden(
+    currentPath: string,
+    macro: MacroTipoDocumento,
+  ): Promise<{ path: string; url: string }> {
+    const filename =
+      currentPath.split('/').pop() || sanitizeFilename('documento.pdf');
+    const destPath = hiddenPath(macro, filename);
+    return this.moveObject(currentPath, destPath);
+  }
+
+  async moveFromHiddenToPublished(
+    currentPath: string,
+    macro: MacroTipoDocumento,
+  ): Promise<{ path: string; url: string }> {
+    const filename =
+      currentPath.split('/').pop() || sanitizeFilename('documento.pdf');
+    const destPath = publishedPath(macro, filename);
+    return this.moveObject(currentPath, destPath);
   }
 
   async getSignedUrl(path: string, expiresMinutes = 15): Promise<string> {

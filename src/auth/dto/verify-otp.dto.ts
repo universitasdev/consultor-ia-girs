@@ -1,9 +1,11 @@
 // src/auth/dto/verify-otp.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, Length } from 'class-validator';
+import { NormalizeEmail } from './normalize-email';
 
 export class VerifyOtpDto {
   @ApiProperty({ example: 'usuario@example.com' })
+  @NormalizeEmail()
   @IsEmail()
   email: string;
 

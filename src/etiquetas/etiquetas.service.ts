@@ -19,21 +19,42 @@ export class EtiquetasService {
     return nombre.trim().replace(/\s+/g, ' ');
   }
 
+  /** `nombre` es @unique en BD (incluye borradas): mapear P2002 a 409 en vez de 500. */
+  private rethrowUniqueConflict(error: unknown): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw new ConflictException('Ya existe una etiqueta con ese nombre.');
+    }
+    throw error;
+  }
+
   async create(autorId: string, dto: CreateEtiquetaDto) {
     const nombre = this.normalizeNombre(dto.nombre);
+    // Incluye borradas: el índice único también las cuenta
     const existing = await this.prisma.etiqueta.findFirst({
-      where: {
-        nombre: { equals: nombre, mode: 'insensitive' },
-        deletedAt: null,
-      },
+      where: { nombre: { equals: nombre, mode: 'insensitive' } },
+      orderBy: { deletedAt: { sort: 'asc', nulls: 'first' } },
     });
-    if (existing) {
+    if (existing && !existing.deletedAt) {
       throw new ConflictException('Ya existe una etiqueta con ese nombre.');
     }
 
-    return this.prisma.etiqueta.create({
-      data: { nombre, autorId },
-    });
+    try {
+      if (existing) {
+        // Etiqueta borrada (soft delete) con el mismo nombre: restaurarla
+        return await this.prisma.etiqueta.update({
+          where: { id: existing.id },
+          data: { deletedAt: null, nombre, autorId },
+        });
+      }
+      return await this.prisma.etiqueta.create({
+        data: { nombre, autorId },
+      });
+    } catch (error) {
+      this.rethrowUniqueConflict(error);
+    }
   }
 
   async findAll(query: GetEtiquetasQueryDto) {
@@ -92,10 +113,14 @@ export class EtiquetasService {
       throw new ConflictException('Ya existe una etiqueta con ese nombre.');
     }
 
-    return this.prisma.etiqueta.update({
-      where: { id },
-      data: { nombre },
-    });
+    try {
+      return await this.prisma.etiqueta.update({
+        where: { id },
+        data: { nombre },
+      });
+    } catch (error) {
+      this.rethrowUniqueConflict(error);
+    }
   }
 
   async softDelete(id: string) {

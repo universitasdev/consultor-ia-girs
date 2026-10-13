@@ -358,9 +358,10 @@ export class AuthService {
 
     if (!refreshTokenMatches) {
       console.warn(
-        `[refreshTokens] User ${userId}: ¡NO COINCIDEN! Posible reutilización de token detectada. Invalidando sesión. (RF2)`,
+        `[refreshTokens] User ${userId}: Refresh token no coincide (ya rotado o de otra sesión). Rechazando sin invalidar la sesión vigente. (RF2)`,
       );
-      await this.updateRefreshTokenHash(user.id, null);
+      // No se borra el hash: un refresh concurrente (varias pestañas/instancias)
+      // llegaba con el token recién rotado y cerraba la sesión válida del usuario.
       throw new ForbiddenException('Acceso denegado (RF2)');
     }
 
